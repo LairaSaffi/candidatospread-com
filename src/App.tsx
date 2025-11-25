@@ -9,7 +9,7 @@ import Auth from "./pages/Auth";
 import NewJob from "./pages/NewJob";
 import JobDetails from "./pages/JobDetails";
 import NewCandidate from "./pages/NewCandidate";
-import EvaluatePage from "./pages/EvaluatePage";
+import EvaluateJob from "./pages/EvaluateJob";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,7 +22,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/evaluate/:token" element={<EvaluatePage />} />
+          <Route path="/evaluate/:token" element={<EvaluateJob />} />
           <Route
             path="/"
             element={

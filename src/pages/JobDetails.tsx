@@ -27,13 +27,17 @@ interface Candidate {
   technical_test_url: string | null;
   hr_interview_notes: string | null;
   status: "pending" | "under_review" | "approved" | "rejected";
-  evaluation_token?: string;
+}
+
+interface EvaluationLink {
+  evaluator_token: string;
 }
 
 export default function JobDetails() {
   const { id } = useParams();
   const [job, setJob] = useState<Job | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [evaluationLink, setEvaluationLink] = useState<EvaluationLink | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -57,21 +61,35 @@ export default function JobDetails() {
 
       const { data: candidatesData, error: candidatesError } = await supabase
         .from("candidates")
-        .select(`
-          *,
-          evaluations(evaluator_token)
-        `)
+        .select("*")
         .eq("job_id", id)
         .order("created_at", { ascending: false });
 
       if (candidatesError) throw candidatesError;
-      
-      const candidatesWithTokens = candidatesData?.map((c: any) => ({
-        ...c,
-        evaluation_token: c.evaluations?.[0]?.evaluator_token,
-      }));
+      setCandidates(candidatesData as Candidate[] || []);
 
-      setCandidates(candidatesWithTokens || []);
+      // Buscar ou criar link de avaliação da vaga
+      const { data: existingLink, error: linkError } = await supabase
+        .from("job_evaluation_links")
+        .select("evaluator_token")
+        .eq("job_id", id)
+        .maybeSingle();
+
+      if (linkError) throw linkError;
+
+      if (existingLink) {
+        setEvaluationLink(existingLink);
+      } else {
+        // Criar link de avaliação se não existir
+        const { data: newLink, error: createError } = await supabase
+          .from("job_evaluation_links")
+          .insert({ job_id: id })
+          .select("evaluator_token")
+          .single();
+
+        if (createError) throw createError;
+        setEvaluationLink(newLink);
+      }
     } catch (error: any) {
       toast({
         title: "Erro ao carregar dados",
@@ -83,12 +101,13 @@ export default function JobDetails() {
     }
   };
 
-  const copyEvaluationLink = (token: string) => {
-    const link = `${window.location.origin}/evaluate/${token}`;
+  const copyEvaluationLink = () => {
+    if (!evaluationLink) return;
+    const link = `${window.location.origin}/evaluate/${evaluationLink.evaluator_token}`;
     navigator.clipboard.writeText(link);
     toast({
       title: "Link copiado!",
-      description: "O link de avaliação foi copiado para a área de transferência.",
+      description: "O link de avaliação da vaga foi copiado para a área de transferência.",
     });
   };
 
@@ -123,7 +142,7 @@ export default function JobDetails() {
         <Card className="mb-8">
           <CardHeader>
             <div className="flex items-start justify-between">
-              <div>
+              <div className="flex-1">
                 <CardTitle className="text-3xl">{job.title}</CardTitle>
                 <CardDescription className="mt-2 space-y-1">
                   {job.department && <div>Departamento: {job.department}</div>}
@@ -131,7 +150,19 @@ export default function JobDetails() {
                   {job.employment_type && <div>Tipo: {job.employment_type}</div>}
                 </CardDescription>
               </div>
-              <StatusBadge status={job.status} />
+              <div className="flex flex-col gap-2 items-end">
+                <StatusBadge status={job.status} />
+                {evaluationLink && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyEvaluationLink}
+                  >
+                    <LinkIcon className="h-4 w-4 mr-2" />
+                    Copiar Link da Vaga
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           {job.description && (
@@ -193,22 +224,7 @@ export default function JobDetails() {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2 items-end">
-                      <StatusBadge status={candidate.status} />
-                      {candidate.evaluation_token && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            copyEvaluationLink(candidate.evaluation_token!);
-                          }}
-                        >
-                          <LinkIcon className="h-3 w-3 mr-1" />
-                          Copiar Link
-                        </Button>
-                      )}
-                    </div>
+                    <StatusBadge status={candidate.status} />
                   </div>
                 </CardHeader>
                 <CardContent>

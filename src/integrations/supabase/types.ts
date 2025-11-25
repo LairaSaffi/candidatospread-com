@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      candidate_evaluations: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          decision: string | null
+          evaluated_at: string | null
+          id: string
+          job_evaluation_link_id: string
+          justification: string | null
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          decision?: string | null
+          evaluated_at?: string | null
+          id?: string
+          job_evaluation_link_id: string
+          justification?: string | null
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          decision?: string | null
+          evaluated_at?: string | null
+          id?: string
+          job_evaluation_link_id?: string
+          justification?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_evaluations_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_evaluations_job_evaluation_link_id_fkey"
+            columns: ["job_evaluation_link_id"]
+            isOneToOne: false
+            referencedRelation: "job_evaluation_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidates: {
         Row: {
           created_at: string
@@ -64,40 +109,31 @@ export type Database = {
           },
         ]
       }
-      evaluations: {
+      job_evaluation_links: {
         Row: {
-          candidate_id: string
           created_at: string
-          decision: string | null
-          evaluated_at: string | null
           evaluator_token: string
           id: string
-          justification: string | null
+          job_id: string
         }
         Insert: {
-          candidate_id: string
           created_at?: string
-          decision?: string | null
-          evaluated_at?: string | null
           evaluator_token?: string
           id?: string
-          justification?: string | null
+          job_id: string
         }
         Update: {
-          candidate_id?: string
           created_at?: string
-          decision?: string | null
-          evaluated_at?: string | null
           evaluator_token?: string
           id?: string
-          justification?: string | null
+          job_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "evaluations_candidate_id_fkey"
-            columns: ["candidate_id"]
+            foreignKeyName: "job_evaluation_links_job_id_fkey"
+            columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "candidates"
+            referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
         ]
