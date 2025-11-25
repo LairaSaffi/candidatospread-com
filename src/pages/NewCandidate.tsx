@@ -81,14 +81,6 @@ export default function NewCandidate() {
         if (updateError) throw updateError;
       }
 
-      const { error: evalError } = await supabase
-        .from("evaluations")
-        .insert({
-          candidate_id: candidate.id,
-        });
-
-      if (evalError) throw evalError;
-
       toast({
         title: "Candidato adicionado!",
         description: "O candidato foi adicionado com sucesso.",
