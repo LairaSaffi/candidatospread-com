@@ -21,6 +21,7 @@ export type Database = {
           decision: string | null
           evaluated_at: string | null
           id: string
+          interview_schedule_options: string | null
           job_evaluation_link_id: string
           justification: string | null
         }
@@ -30,6 +31,7 @@ export type Database = {
           decision?: string | null
           evaluated_at?: string | null
           id?: string
+          interview_schedule_options?: string | null
           job_evaluation_link_id: string
           justification?: string | null
         }
@@ -39,6 +41,7 @@ export type Database = {
           decision?: string | null
           evaluated_at?: string | null
           id?: string
+          interview_schedule_options?: string | null
           job_evaluation_link_id?: string
           justification?: string | null
         }

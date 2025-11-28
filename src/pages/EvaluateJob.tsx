@@ -26,8 +26,9 @@ interface Candidate {
 }
 
 interface CandidateEvaluation {
-  decision: string | null;
+  decision: "approved" | "rejected" | null;
   justification: string | null;
+  interview_schedule_options?: string | null;
 }
 
 export default function EvaluateJob() {
@@ -102,6 +103,7 @@ export default function EvaluateJob() {
           evalMap[ev.candidate_id] = {
             decision: ev.decision,
             justification: ev.justification,
+            interview_schedule_options: ev.interview_schedule_options,
           };
         });
         setEvaluations(evalMap);
@@ -120,8 +122,9 @@ export default function EvaluateJob() {
 
   const handleEvaluation = async (
     candidateId: string,
-    decision: "interested" | "rejected",
-    justification: string
+    decision: "approved" | "rejected",
+    justification?: string,
+    interviewScheduleOptions?: string
   ) => {
     if (!evaluationLinkId) return;
 
@@ -133,6 +136,7 @@ export default function EvaluateJob() {
           candidate_id: candidateId,
           decision,
           justification: justification || null,
+          interview_schedule_options: interviewScheduleOptions || null,
           evaluated_at: new Date().toISOString(),
         }, {
           onConflict: "job_evaluation_link_id,candidate_id"
@@ -258,7 +262,8 @@ export default function EvaluateJob() {
         <div className="space-y-4">
           {candidates.map((candidate) => {
             const evaluation = evaluations[candidate.id];
-            const [justification, setJustification] = useState(evaluation?.justification || "");
+            const [rejectionReason, setRejectionReason] = useState(evaluation?.justification || "");
+            const [scheduleOptions, setScheduleOptions] = useState(evaluation?.interview_schedule_options || "");
 
             return (
               <Card key={candidate.id}>
@@ -313,37 +318,58 @@ export default function EvaluateJob() {
                   )}
 
                   {evaluation?.decision ? (
-                    <div className="flex items-center gap-2 pt-2">
-                      {evaluation.decision === "interested" ? (
-                        <>
-                          <CheckCircle className="h-4 w-4 text-success" />
-                          <Badge className="bg-success text-success-foreground">
-                            Interessado
-                          </Badge>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="h-4 w-4 text-destructive" />
-                          <Badge variant="destructive">Recusado</Badge>
-                        </>
+                    <div className="space-y-2 pt-2 border-t">
+                      <div className="flex items-center gap-2">
+                        {evaluation.decision === "approved" ? (
+                          <>
+                            <CheckCircle className="h-4 w-4 text-success" />
+                            <Badge className="bg-success text-success-foreground">
+                              Aprovado para Entrevista
+                            </Badge>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-4 w-4 text-destructive" />
+                            <Badge variant="destructive">CV Reprovado</Badge>
+                          </>
+                        )}
+                      </div>
+                      {evaluation.decision === "rejected" && evaluation.justification && (
+                        <div className="text-xs text-muted-foreground bg-muted p-2 rounded-md">
+                          <strong>Motivo da Reprovação:</strong> {evaluation.justification}
+                        </div>
                       )}
-                      {evaluation.justification && (
-                        <span className="text-xs text-muted-foreground ml-2">
-                          - {evaluation.justification}
-                        </span>
+                      {evaluation.decision === "approved" && evaluation.interview_schedule_options && (
+                        <div className="text-xs text-muted-foreground bg-muted p-2 rounded-md">
+                          <strong>Opções de Horários:</strong> {evaluation.interview_schedule_options}
+                        </div>
                       )}
                     </div>
                   ) : (
                     <div className="space-y-3 pt-2 border-t">
                       <div className="space-y-2">
-                        <Label htmlFor={`justification-${candidate.id}`} className="text-xs">
-                          Justificativa (opcional)
+                        <Label htmlFor={`rejection-${candidate.id}`} className="text-xs">
+                          Motivo da Reprovação (se reprovar)
                         </Label>
                         <Textarea
-                          id={`justification-${candidate.id}`}
-                          value={justification}
-                          onChange={(e) => setJustification(e.target.value)}
-                          placeholder="Adicione uma justificativa se desejar..."
+                          id={`rejection-${candidate.id}`}
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          placeholder="Descreva o motivo da reprovação do CV..."
+                          rows={2}
+                          className="text-sm"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor={`schedule-${candidate.id}`} className="text-xs">
+                          Opções de Horários para Entrevista (se aprovar)
+                        </Label>
+                        <Textarea
+                          id={`schedule-${candidate.id}`}
+                          value={scheduleOptions}
+                          onChange={(e) => setScheduleOptions(e.target.value)}
+                          placeholder="Ex: Segunda 14h, Terça 10h, Quarta 16h..."
                           rows={2}
                           className="text-sm"
                         />
@@ -351,21 +377,21 @@ export default function EvaluateJob() {
 
                       <div className="flex gap-2">
                         <Button
-                          onClick={() => handleEvaluation(candidate.id, "rejected", justification)}
+                          onClick={() => handleEvaluation(candidate.id, "rejected", rejectionReason)}
                           variant="destructive"
                           size="sm"
                           className="flex-1"
                         >
                           <XCircle className="h-3 w-3 mr-1" />
-                          Recusar
+                          Reprovar CV
                         </Button>
                         <Button
-                          onClick={() => handleEvaluation(candidate.id, "interested", justification)}
+                          onClick={() => handleEvaluation(candidate.id, "approved", undefined, scheduleOptions)}
                           size="sm"
                           className="flex-1 bg-success hover:bg-success/90"
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
-                          Interessado
+                          Aprovar para Entrevista
                         </Button>
                       </div>
                     </div>
