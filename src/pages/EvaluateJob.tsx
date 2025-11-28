@@ -47,59 +47,67 @@ export default function EvaluateJob() {
 
   const loadJobData = async () => {
     try {
-      // Buscar link de avaliação
+      // Buscar link de avaliação e job
       const { data: linkData, error: linkError } = await supabase
         .from("job_evaluation_links")
         .select(`
           id,
-          jobs (title, description, department)
+          job_id,
+          jobs (
+            title,
+            description,
+            department
+          )
         `)
         .eq("evaluator_token", token)
-        .single();
+        .maybeSingle();
 
-      if (linkError) throw linkError;
+      if (linkError) {
+        console.error("Erro ao buscar link:", linkError);
+        throw linkError;
+      }
 
-      if (linkData) {
-        setEvaluationLinkId(linkData.id);
-        const jobData: any = linkData.jobs;
-        setJob(jobData);
+      if (!linkData) {
+        console.error("Link não encontrado");
+        return;
+      }
 
-        // Buscar candidatos da vaga
-        const { data: jobLinkData } = await supabase
-          .from("job_evaluation_links")
-          .select("job_id")
-          .eq("evaluator_token", token)
-          .single();
+      setEvaluationLinkId(linkData.id);
+      const jobData = linkData.jobs as Job;
+      setJob(jobData);
 
-        if (jobLinkData) {
-          const { data: candidatesData, error: candidatesError } = await supabase
-            .from("candidates")
-            .select("*")
-            .eq("job_id", jobLinkData.job_id)
-            .order("created_at", { ascending: false });
+      // Buscar candidatos da vaga
+      const { data: candidatesData, error: candidatesError } = await supabase
+        .from("candidates")
+        .select("*")
+        .eq("job_id", linkData.job_id)
+        .order("created_at", { ascending: false });
 
-          if (candidatesError) throw candidatesError;
-          setCandidates(candidatesData || []);
+      if (candidatesError) {
+        console.error("Erro ao buscar candidatos:", candidatesError);
+        throw candidatesError;
+      }
 
-          // Buscar avaliações existentes
-          const { data: evalData } = await supabase
-            .from("candidate_evaluations")
-            .select("*")
-            .eq("job_evaluation_link_id", linkData.id);
+      setCandidates(candidatesData || []);
 
-          if (evalData) {
-            const evalMap: Record<string, CandidateEvaluation> = {};
-            evalData.forEach((ev: any) => {
-              evalMap[ev.candidate_id] = {
-                decision: ev.decision,
-                justification: ev.justification,
-              };
-            });
-            setEvaluations(evalMap);
-          }
-        }
+      // Buscar avaliações existentes
+      const { data: evalData } = await supabase
+        .from("candidate_evaluations")
+        .select("*")
+        .eq("job_evaluation_link_id", linkData.id);
+
+      if (evalData) {
+        const evalMap: Record<string, CandidateEvaluation> = {};
+        evalData.forEach((ev: any) => {
+          evalMap[ev.candidate_id] = {
+            decision: ev.decision,
+            justification: ev.justification,
+          };
+        });
+        setEvaluations(evalMap);
       }
     } catch (error: any) {
+      console.error("Erro completo:", error);
       toast({
         title: "Erro ao carregar dados",
         description: error.message,
@@ -155,17 +163,59 @@ export default function EvaluateJob() {
     );
   }
 
-  if (!job || candidates.length === 0) {
+  if (!job) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/30">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Link inválido ou sem candidatos</h2>
+            <h2 className="text-xl font-semibold mb-2">Link inválido</h2>
             <p className="text-muted-foreground">
-              Este link de avaliação não é válido ou não há candidatos para avaliar.
+              Este link de avaliação não é válido.
             </p>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (candidates.length === 0) {
+    return (
+      <div className="min-h-screen bg-muted/30 py-8 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Briefcase className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-2xl">{job.title}</CardTitle>
+                  {job.department && (
+                    <CardDescription className="mt-1">
+                      Departamento: {job.department}
+                    </CardDescription>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            {job.description && (
+              <CardContent>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {job.description}
+                </p>
+              </CardContent>
+            )}
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <h2 className="text-lg font-semibold mb-2">Nenhum candidato ainda</h2>
+              <p className="text-sm text-muted-foreground">
+                Ainda não há candidatos para avaliar nesta vaga.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
