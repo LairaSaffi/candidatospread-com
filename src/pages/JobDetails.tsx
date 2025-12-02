@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ArrowLeft, Plus, Mail, Phone, FileText, Link as LinkIcon, ExternalLink } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -12,17 +12,18 @@ interface Job {
   id: string;
   title: string;
   description: string | null;
-  department: string | null;
-  location: string | null;
-  employment_type: string | null;
+  work_model: string | null;
+  client: string | null;
+  responsible_manager: string | null;
+  spread_manager: string | null;
+  commercial_responsible: string | null;
+  recruiter_responsible: string | null;
   status: "open" | "closed" | "on_hold";
 }
 
 interface Candidate {
   id: string;
   name: string;
-  email: string;
-  phone: string | null;
   cv_url: string | null;
   technical_test_url: string | null;
   hr_interview_notes: string | null;
@@ -145,9 +146,12 @@ export default function JobDetails() {
               <div className="flex-1">
                 <CardTitle className="text-3xl">{job.title}</CardTitle>
                 <CardDescription className="mt-2 space-y-1">
-                  {job.department && <div>Departamento: {job.department}</div>}
-                  {job.location && <div>Localização: {job.location}</div>}
-                  {job.employment_type && <div>Tipo: {job.employment_type}</div>}
+                  {job.work_model && <div>Modelo de Trabalho: {job.work_model}</div>}
+                  {job.client && <div>Cliente: {job.client}</div>}
+                  {job.responsible_manager && <div>Gestor Responsável: {job.responsible_manager}</div>}
+                  {job.spread_manager && <div>Gestor Spread: {job.spread_manager}</div>}
+                  {job.commercial_responsible && <div>Responsável Comercial: {job.commercial_responsible}</div>}
+                  {job.recruiter_responsible && <div>Recrutador Responsável: {job.recruiter_responsible}</div>}
                 </CardDescription>
               </div>
               <div className="flex flex-col gap-2 items-end">
@@ -211,18 +215,6 @@ export default function JobDetails() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-xl">{candidate.name}</CardTitle>
-                      <div className="flex flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {candidate.email}
-                        </div>
-                        {candidate.phone && (
-                          <div className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            {candidate.phone}
-                          </div>
-                        )}
-                      </div>
                     </div>
                     <StatusBadge status={candidate.status} />
                   </div>
@@ -244,7 +236,7 @@ export default function JobDetails() {
                     {candidate.hr_interview_notes && (
                       <Badge variant="secondary">
                         <FileText className="h-3 w-3 mr-1" />
-                        Notas RH
+                        Parecer RH
                       </Badge>
                     )}
                   </div>

@@ -66,12 +66,10 @@ export type Database = {
         Row: {
           created_at: string
           cv_url: string | null
-          email: string
           hr_interview_notes: string | null
           id: string
           job_id: string
           name: string
-          phone: string | null
           status: string
           technical_test_url: string | null
           updated_at: string
@@ -79,12 +77,10 @@ export type Database = {
         Insert: {
           created_at?: string
           cv_url?: string | null
-          email: string
           hr_interview_notes?: string | null
           id?: string
           job_id: string
           name: string
-          phone?: string | null
           status?: string
           technical_test_url?: string | null
           updated_at?: string
@@ -92,12 +88,10 @@ export type Database = {
         Update: {
           created_at?: string
           cv_url?: string | null
-          email?: string
           hr_interview_notes?: string | null
           id?: string
           job_id?: string
           name?: string
-          phone?: string | null
           status?: string
           technical_test_url?: string | null
           updated_at?: string
@@ -143,40 +137,49 @@ export type Database = {
       }
       jobs: {
         Row: {
+          client: string | null
+          commercial_responsible: string | null
           created_at: string
           created_by: string | null
-          department: string | null
           description: string | null
-          employment_type: string | null
           id: string
-          location: string | null
+          recruiter_responsible: string | null
+          responsible_manager: string | null
+          spread_manager: string | null
           status: string
           title: string
           updated_at: string
+          work_model: string | null
         }
         Insert: {
+          client?: string | null
+          commercial_responsible?: string | null
           created_at?: string
           created_by?: string | null
-          department?: string | null
           description?: string | null
-          employment_type?: string | null
           id?: string
-          location?: string | null
+          recruiter_responsible?: string | null
+          responsible_manager?: string | null
+          spread_manager?: string | null
           status?: string
           title: string
           updated_at?: string
+          work_model?: string | null
         }
         Update: {
+          client?: string | null
+          commercial_responsible?: string | null
           created_at?: string
           created_by?: string | null
-          department?: string | null
           description?: string | null
-          employment_type?: string | null
           id?: string
-          location?: string | null
+          recruiter_responsible?: string | null
+          responsible_manager?: string | null
+          spread_manager?: string | null
           status?: string
           title?: string
           updated_at?: string
+          work_model?: string | null
         }
         Relationships: []
       }
