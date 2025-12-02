@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export default function NewCandidate() {
   const { jobId } = useParams();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [hrNotes, setHrNotes] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [testFile, setTestFile] = useState<File | null>(null);
@@ -48,8 +46,6 @@ export default function NewCandidate() {
         .insert({
           job_id: jobId,
           name,
-          email,
-          phone: phone || null,
           hr_interview_notes: hrNotes || null,
           status: "pending",
         })
@@ -121,40 +117,18 @@ export default function NewCandidate() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo *</Label>
+                <Label htmlFor="name">Nome *</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ex: João Silva"
+                  placeholder="Nome do candidato"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="joao@email.com"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cv">Currículo (PDF)</Label>
+                <Label htmlFor="cv">Anexo do CV (PDF)</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="cv"
@@ -177,7 +151,7 @@ export default function NewCandidate() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="test">Teste Técnico (PDF)</Label>
+                <Label htmlFor="test">Anexo de Teste Técnico (PDF)</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="test"
@@ -200,12 +174,12 @@ export default function NewCandidate() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hrNotes">Notas da Entrevista RH</Label>
+                <Label htmlFor="hrNotes">Parecer RH</Label>
                 <Textarea
                   id="hrNotes"
                   value={hrNotes}
                   onChange={(e) => setHrNotes(e.target.value)}
-                  placeholder="Observações sobre a entrevista com RH"
+                  placeholder="Parecer do RH sobre o candidato"
                   rows={6}
                 />
               </div>

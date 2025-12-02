@@ -13,9 +13,12 @@ import { ArrowLeft } from "lucide-react";
 export default function NewJob() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [department, setDepartment] = useState("");
-  const [location, setLocation] = useState("");
-  const [employmentType, setEmploymentType] = useState("");
+  const [workModel, setWorkModel] = useState("");
+  const [client, setClient] = useState("");
+  const [responsibleManager, setResponsibleManager] = useState("");
+  const [spreadManager, setSpreadManager] = useState("");
+  const [commercialResponsible, setCommercialResponsible] = useState("");
+  const [recruiterResponsible, setRecruiterResponsible] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,9 +35,12 @@ export default function NewJob() {
       const { error } = await supabase.from("jobs").insert({
         title,
         description,
-        department,
-        location,
-        employment_type: employmentType,
+        work_model: workModel || null,
+        client: client || null,
+        responsible_manager: responsibleManager || null,
+        spread_manager: spreadManager || null,
+        commercial_responsible: commercialResponsible || null,
+        recruiter_responsible: recruiterResponsible || null,
         created_by: user.id,
         status: "open",
       });
@@ -92,48 +98,77 @@ export default function NewJob() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="department">Departamento</Label>
-                <Input
-                  id="department"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  placeholder="Ex: Tecnologia"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="location">Localização</Label>
-                <Input
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Ex: São Paulo - SP"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="employmentType">Tipo de Contratação</Label>
-                <Select value={employmentType} onValueChange={setEmploymentType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CLT">CLT</SelectItem>
-                    <SelectItem value="PJ">PJ</SelectItem>
-                    <SelectItem value="Estágio">Estágio</SelectItem>
-                    <SelectItem value="Temporário">Temporário</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
+                <Label htmlFor="description">Descrição da Vaga</Label>
                 <Textarea
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Descreva os requisitos e responsabilidades da vaga"
                   rows={6}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="workModel">Modelo de Trabalho</Label>
+                <Select value={workModel} onValueChange={setWorkModel}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Presencial">Presencial</SelectItem>
+                    <SelectItem value="Remoto">Remoto</SelectItem>
+                    <SelectItem value="Híbrido">Híbrido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="client">Cliente</Label>
+                <Input
+                  id="client"
+                  value={client}
+                  onChange={(e) => setClient(e.target.value)}
+                  placeholder="Nome do cliente"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="responsibleManager">Gestor Responsável</Label>
+                <Input
+                  id="responsibleManager"
+                  value={responsibleManager}
+                  onChange={(e) => setResponsibleManager(e.target.value)}
+                  placeholder="Nome do gestor responsável"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="spreadManager">Gestor Spread</Label>
+                <Input
+                  id="spreadManager"
+                  value={spreadManager}
+                  onChange={(e) => setSpreadManager(e.target.value)}
+                  placeholder="Nome do gestor Spread"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="commercialResponsible">Responsável Comercial</Label>
+                <Input
+                  id="commercialResponsible"
+                  value={commercialResponsible}
+                  onChange={(e) => setCommercialResponsible(e.target.value)}
+                  placeholder="Nome do responsável comercial"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="recruiterResponsible">Recrutador Responsável</Label>
+                <Input
+                  id="recruiterResponsible"
+                  value={recruiterResponsible}
+                  onChange={(e) => setRecruiterResponsible(e.target.value)}
+                  placeholder="Nome do recrutador responsável"
                 />
               </div>
 

@@ -6,20 +6,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Mail, Phone, FileText, Briefcase, ExternalLink } from "lucide-react";
+import { CheckCircle, XCircle, FileText, Briefcase, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Job {
   title: string;
   description: string | null;
-  department: string | null;
+  client: string | null;
 }
 
 interface Candidate {
   id: string;
   name: string;
-  email: string;
-  phone: string | null;
   cv_url: string | null;
   technical_test_url: string | null;
   hr_interview_notes: string | null;
@@ -31,11 +29,17 @@ interface CandidateEvaluation {
   interview_schedule_options?: string | null;
 }
 
+interface CandidateFormState {
+  rejectionReason: string;
+  scheduleOptions: string;
+}
+
 export default function EvaluateJob() {
   const { token } = useParams();
   const [job, setJob] = useState<Job | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [evaluations, setEvaluations] = useState<Record<string, CandidateEvaluation>>({});
+  const [formStates, setFormStates] = useState<Record<string, CandidateFormState>>({});
   const [evaluationLinkId, setEvaluationLinkId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -57,7 +61,7 @@ export default function EvaluateJob() {
           jobs (
             title,
             description,
-            department
+            client
           )
         `)
         .eq("evaluator_token", token)
@@ -80,7 +84,7 @@ export default function EvaluateJob() {
       // Buscar candidatos da vaga
       const { data: candidatesData, error: candidatesError } = await supabase
         .from("candidates")
-        .select("*")
+        .select("id, name, cv_url, technical_test_url, hr_interview_notes")
         .eq("job_id", linkData.job_id)
         .order("created_at", { ascending: false });
 
@@ -99,14 +103,20 @@ export default function EvaluateJob() {
 
       if (evalData) {
         const evalMap: Record<string, CandidateEvaluation> = {};
+        const formMap: Record<string, CandidateFormState> = {};
         evalData.forEach((ev: any) => {
           evalMap[ev.candidate_id] = {
             decision: ev.decision,
             justification: ev.justification,
             interview_schedule_options: ev.interview_schedule_options,
           };
+          formMap[ev.candidate_id] = {
+            rejectionReason: ev.justification || "",
+            scheduleOptions: ev.interview_schedule_options || "",
+          };
         });
         setEvaluations(evalMap);
+        setFormStates(formMap);
       }
     } catch (error: any) {
       console.error("Erro completo:", error);
@@ -118,6 +128,20 @@ export default function EvaluateJob() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateFormState = (candidateId: string, field: keyof CandidateFormState, value: string) => {
+    setFormStates(prev => ({
+      ...prev,
+      [candidateId]: {
+        ...prev[candidateId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const getFormState = (candidateId: string): CandidateFormState => {
+    return formStates[candidateId] || { rejectionReason: "", scheduleOptions: "" };
   };
 
   const handleEvaluation = async (
@@ -194,9 +218,9 @@ export default function EvaluateJob() {
                 </div>
                 <div className="flex-1">
                   <CardTitle className="text-2xl">{job.title}</CardTitle>
-                  {job.department && (
+                  {job.client && (
                     <CardDescription className="mt-1">
-                      Departamento: {job.department}
+                      Cliente: {job.client}
                     </CardDescription>
                   )}
                 </div>
@@ -235,9 +259,9 @@ export default function EvaluateJob() {
               </div>
               <div className="flex-1">
                 <CardTitle className="text-2xl">{job.title}</CardTitle>
-                {job.department && (
+                {job.client && (
                   <CardDescription className="mt-1">
-                    Departamento: {job.department}
+                    Cliente: {job.client}
                   </CardDescription>
                 )}
               </div>
@@ -262,25 +286,12 @@ export default function EvaluateJob() {
         <div className="space-y-4">
           {candidates.map((candidate) => {
             const evaluation = evaluations[candidate.id];
-            const [rejectionReason, setRejectionReason] = useState(evaluation?.justification || "");
-            const [scheduleOptions, setScheduleOptions] = useState(evaluation?.interview_schedule_options || "");
+            const formState = getFormState(candidate.id);
 
             return (
               <Card key={candidate.id}>
                 <CardHeader>
                   <CardTitle className="text-lg">{candidate.name}</CardTitle>
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-3 w-3" />
-                      {candidate.email}
-                    </div>
-                    {candidate.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-3 w-3" />
-                        {candidate.phone}
-                      </div>
-                    )}
-                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex gap-2">
@@ -310,7 +321,7 @@ export default function EvaluateJob() {
 
                   {candidate.hr_interview_notes && (
                     <div>
-                      <Label className="text-xs font-semibold">Notas da Entrevista RH</Label>
+                      <Label className="text-xs font-semibold">Parecer RH</Label>
                       <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap bg-muted p-2 rounded-md">
                         {candidate.hr_interview_notes}
                       </p>
@@ -353,8 +364,8 @@ export default function EvaluateJob() {
                         </Label>
                         <Textarea
                           id={`rejection-${candidate.id}`}
-                          value={rejectionReason}
-                          onChange={(e) => setRejectionReason(e.target.value)}
+                          value={formState.rejectionReason}
+                          onChange={(e) => updateFormState(candidate.id, "rejectionReason", e.target.value)}
                           placeholder="Descreva o motivo da reprovação do CV..."
                           rows={2}
                           className="text-sm"
@@ -367,8 +378,8 @@ export default function EvaluateJob() {
                         </Label>
                         <Textarea
                           id={`schedule-${candidate.id}`}
-                          value={scheduleOptions}
-                          onChange={(e) => setScheduleOptions(e.target.value)}
+                          value={formState.scheduleOptions}
+                          onChange={(e) => updateFormState(candidate.id, "scheduleOptions", e.target.value)}
                           placeholder="Ex: Segunda 14h, Terça 10h, Quarta 16h..."
                           rows={2}
                           className="text-sm"
@@ -377,7 +388,7 @@ export default function EvaluateJob() {
 
                       <div className="flex gap-2">
                         <Button
-                          onClick={() => handleEvaluation(candidate.id, "rejected", rejectionReason)}
+                          onClick={() => handleEvaluation(candidate.id, "rejected", formState.rejectionReason)}
                           variant="destructive"
                           size="sm"
                           className="flex-1"
@@ -386,7 +397,7 @@ export default function EvaluateJob() {
                           Reprovar CV
                         </Button>
                         <Button
-                          onClick={() => handleEvaluation(candidate.id, "approved", undefined, scheduleOptions)}
+                          onClick={() => handleEvaluation(candidate.id, "approved", undefined, formState.scheduleOptions)}
                           size="sm"
                           className="flex-1 bg-success hover:bg-success/90"
                         >
