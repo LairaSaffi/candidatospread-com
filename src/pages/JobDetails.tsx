@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ArrowLeft, Plus, FileText, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Link as LinkIcon, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -156,16 +156,26 @@ export default function JobDetails() {
               </div>
               <div className="flex flex-col gap-2 items-end">
                 <StatusBadge status={job.status} />
-                {evaluationLink && (
+                <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={copyEvaluationLink}
+                    onClick={() => navigate(`/jobs/${id}/edit`)}
                   >
-                    <LinkIcon className="h-4 w-4 mr-2" />
-                    Copiar Link da Vaga
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Editar
                   </Button>
-                )}
+                  {evaluationLink && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={copyEvaluationLink}
+                    >
+                      <LinkIcon className="h-4 w-4 mr-2" />
+                      Copiar Link
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </CardHeader>

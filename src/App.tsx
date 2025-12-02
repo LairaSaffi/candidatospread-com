@@ -7,6 +7,7 @@ import { AuthGuard } from "@/components/AuthGuard";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import NewJob from "./pages/NewJob";
+import EditJob from "./pages/EditJob";
 import JobDetails from "./pages/JobDetails";
 import NewCandidate from "./pages/NewCandidate";
 import EvaluateJob from "./pages/EvaluateJob";
@@ -44,6 +45,14 @@ const App = () => (
             element={
               <AuthGuard>
                 <JobDetails />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/jobs/:id/edit"
+            element={
+              <AuthGuard>
+                <EditJob />
               </AuthGuard>
             }
           />
