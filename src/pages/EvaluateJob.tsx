@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, FileText, Briefcase, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
+import { openSignedFile } from "@/lib/storage";
 interface Job {
   title: string;
   description: string | null;
@@ -301,7 +301,7 @@ export default function EvaluateJob() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(candidate.cv_url!, "_blank")}
+                        onClick={() => openSignedFile("cvs", candidate.cv_url!)}
                       >
                         <FileText className="h-3 w-3 mr-1" />
                         Ver CV
@@ -312,7 +312,7 @@ export default function EvaluateJob() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(candidate.technical_test_url!, "_blank")}
+                        onClick={() => openSignedFile("technical-tests", candidate.technical_test_url!)}
                       >
                         <FileText className="h-3 w-3 mr-1" />
                         Ver Teste
