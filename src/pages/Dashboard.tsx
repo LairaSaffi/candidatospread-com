@@ -100,7 +100,7 @@ export default function Dashboard() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-xl bg-muted-foreground">{job.title}</CardTitle>
+                      <CardTitle className="text-xl bg-primary-foreground">{job.title}</CardTitle>
                       {job.department && <CardDescription className="mt-1">
                           {job.department}
                         </CardDescription>}
