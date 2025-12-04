@@ -52,19 +52,9 @@ export default function EvaluateJob() {
 
   const loadJobData = async () => {
     try {
-      // Buscar link de avaliação e job
+      // Buscar link de avaliação usando função segura (previne enumeração de tokens)
       const { data: linkData, error: linkError } = await supabase
-        .from("job_evaluation_links")
-        .select(`
-          id,
-          job_id,
-          jobs (
-            title,
-            description,
-            client
-          )
-        `)
-        .eq("evaluator_token", token)
+        .rpc('get_evaluation_link_by_token', { p_token: token })
         .maybeSingle();
 
       if (linkError) {
@@ -78,7 +68,19 @@ export default function EvaluateJob() {
       }
 
       setEvaluationLinkId(linkData.id);
-      const jobData = linkData.jobs as Job;
+
+      // Buscar dados da vaga
+      const { data: jobData, error: jobError } = await supabase
+        .from("jobs")
+        .select("title, description, client")
+        .eq("id", linkData.job_id)
+        .single();
+
+      if (jobError) {
+        console.error("Erro ao buscar vaga:", jobError);
+        throw jobError;
+      }
+
       setJob(jobData);
 
       // Buscar candidatos da vaga

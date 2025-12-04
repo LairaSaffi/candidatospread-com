@@ -188,7 +188,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_evaluation_link_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          created_at: string
+          evaluator_token: string
+          id: string
+          job_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
