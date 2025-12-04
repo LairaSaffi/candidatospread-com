@@ -29,11 +29,9 @@ export default function NewCandidate() {
 
     if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(fileName);
-
-    return publicUrl;
+    // Retorna apenas o caminho do arquivo (não a URL pública)
+    // URLs assinadas serão geradas quando o arquivo for acessado
+    return fileName;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
