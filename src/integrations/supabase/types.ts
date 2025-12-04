@@ -188,6 +188,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_view_evaluation: { Args: { p_link_id: string }; Returns: boolean }
       get_evaluation_link_by_token: {
         Args: { p_token: string }
         Returns: {
@@ -196,6 +197,10 @@ export type Database = {
           id: string
           job_id: string
         }[]
+      }
+      validate_evaluation_access: {
+        Args: { p_candidate_id: string; p_link_id: string }
+        Returns: boolean
       }
     }
     Enums: {
