@@ -75,7 +75,7 @@ export default function Dashboard() {
             <h2 className="text-3xl font-bold">Oportunidades Ativas</h2>
             <p className="text-muted-foreground mt-1">Painel de gestão dos candidatos disponibilizados aos clientes</p>
           </div>
-          <Button onClick={() => navigate("/jobs/new")}>
+          <Button onClick={() => navigate("/jobs/new")} className="bg-violet-800 hover:bg-violet-700">
             <Plus className="h-4 w-4 mr-2" />
             Nova Vaga
           </Button>
