@@ -234,6 +234,7 @@ export type Database = {
     }
     Functions: {
       can_view_evaluation: { Args: { p_link_id: string }; Returns: boolean }
+      get_evaluation_data_by_token: { Args: { p_token: string }; Returns: Json }
       get_evaluation_link_by_token: {
         Args: { p_token: string }
         Returns: {
