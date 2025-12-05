@@ -9,7 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, FileText, Briefcase, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { openSignedFile } from "@/lib/storage";
+
 interface Job {
+  id: string;
   title: string;
   description: string | null;
   client: string | null;
@@ -34,6 +36,18 @@ interface CandidateFormState {
   scheduleOptions: string;
 }
 
+interface EvaluationData {
+  evaluation_link_id: string;
+  job: Job;
+  candidates: Candidate[];
+  evaluations: Array<{
+    candidate_id: string;
+    decision: string | null;
+    justification: string | null;
+    interview_schedule_options: string | null;
+  }>;
+}
+
 export default function EvaluateJob() {
   const { token } = useParams();
   const [job, setJob] = useState<Job | null>(null);
@@ -52,63 +66,35 @@ export default function EvaluateJob() {
 
   const loadJobData = async () => {
     try {
-      // Buscar link de avaliação usando função segura (previne enumeração de tokens)
-      const { data: linkData, error: linkError } = await supabase
-        .rpc('get_evaluation_link_by_token', { p_token: token })
-        .maybeSingle();
+      // Usar a nova função RPC que permite acesso público
+      const { data, error } = await supabase
+        .rpc('get_evaluation_data_by_token', { p_token: token });
 
-      if (linkError) {
-        console.error("Erro ao buscar link:", linkError);
-        throw linkError;
+      if (error) {
+        console.error("Erro ao buscar dados:", error);
+        throw error;
       }
 
-      if (!linkData) {
+      if (!data) {
         console.error("Link não encontrado");
+        setLoading(false);
         return;
       }
 
-      setEvaluationLinkId(linkData.id);
+      const evalData = data as unknown as EvaluationData;
+      
+      setEvaluationLinkId(evalData.evaluation_link_id);
+      setJob(evalData.job);
+      setCandidates(evalData.candidates || []);
 
-      // Buscar dados da vaga
-      const { data: jobData, error: jobError } = await supabase
-        .from("jobs")
-        .select("title, description, client")
-        .eq("id", linkData.job_id)
-        .single();
-
-      if (jobError) {
-        console.error("Erro ao buscar vaga:", jobError);
-        throw jobError;
-      }
-
-      setJob(jobData);
-
-      // Buscar candidatos da vaga
-      const { data: candidatesData, error: candidatesError } = await supabase
-        .from("candidates")
-        .select("id, name, cv_url, technical_test_url, hr_interview_notes")
-        .eq("job_id", linkData.job_id)
-        .order("created_at", { ascending: false });
-
-      if (candidatesError) {
-        console.error("Erro ao buscar candidatos:", candidatesError);
-        throw candidatesError;
-      }
-
-      setCandidates(candidatesData || []);
-
-      // Buscar avaliações existentes
-      const { data: evalData } = await supabase
-        .from("candidate_evaluations")
-        .select("*")
-        .eq("job_evaluation_link_id", linkData.id);
-
-      if (evalData) {
+      // Processar avaliações existentes
+      if (evalData.evaluations && evalData.evaluations.length > 0) {
         const evalMap: Record<string, CandidateEvaluation> = {};
         const formMap: Record<string, CandidateFormState> = {};
-        evalData.forEach((ev: any) => {
+        
+        evalData.evaluations.forEach((ev) => {
           evalMap[ev.candidate_id] = {
-            decision: ev.decision,
+            decision: ev.decision as "approved" | "rejected" | null,
             justification: ev.justification,
             interview_schedule_options: ev.interview_schedule_options,
           };
@@ -117,6 +103,7 @@ export default function EvaluateJob() {
             scheduleOptions: ev.interview_schedule_options || "",
           };
         });
+        
         setEvaluations(evalMap);
         setFormStates(formMap);
       }
