@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { AuthGuard } from "@/components/AuthGuard";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import Bootstrap from "./pages/Bootstrap";
 import NewJob from "./pages/NewJob";
 import EditJob from "./pages/EditJob";
@@ -27,6 +28,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/bootstrap" element={<Bootstrap />} />
             <Route path="/evaluate/:token" element={<EvaluateJob />} />
             <Route
