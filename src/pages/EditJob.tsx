@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft } from "lucide-react";
 
 export default function EditJob() {
@@ -25,12 +26,22 @@ export default function EditJob() {
   const [loadingData, setLoadingData] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { canEditJobs } = useAuth();
 
   useEffect(() => {
+    if (!canEditJobs) {
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para editar vagas.",
+        variant: "destructive",
+      });
+      navigate("/");
+      return;
+    }
     if (id) {
       loadJob();
     }
-  }, [id]);
+  }, [id, canEditJobs]);
 
   const loadJob = async () => {
     try {
