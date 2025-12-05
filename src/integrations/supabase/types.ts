@@ -198,6 +198,8 @@ export type Database = {
           job_id: string
         }[]
       }
+      is_candidate_owner: { Args: { p_candidate_id: string }; Returns: boolean }
+      is_job_owner: { Args: { p_job_id: string }; Returns: boolean }
       validate_evaluation_access: {
         Args: { p_candidate_id: string; p_link_id: string }
         Returns: boolean
