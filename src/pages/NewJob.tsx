@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft } from "lucide-react";
 
 export default function NewJob() {
@@ -22,14 +23,24 @@ export default function NewJob() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { canCreateJobs, user } = useAuth();
+
+  useEffect(() => {
+    if (!canCreateJobs) {
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para criar vagas.",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [canCreateJobs]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) throw new Error("Usuário não autenticado");
 
       const { error } = await supabase.from("jobs").insert({

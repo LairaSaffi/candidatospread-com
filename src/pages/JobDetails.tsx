@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ArrowLeft, Plus, FileText, Link as LinkIcon, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Job {
   id: string;
@@ -42,6 +43,7 @@ export default function JobDetails() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { canEditJobs, canCreateJobs } = useAuth();
 
   useEffect(() => {
     if (id) {
@@ -157,14 +159,16 @@ export default function JobDetails() {
               <div className="flex flex-col gap-2 items-end">
                 <StatusBadge status={job.status} />
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/jobs/${id}/edit`)}
-                  >
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Editar
-                  </Button>
+                  {canEditJobs && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/jobs/${id}/edit`)}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                  )}
                   {evaluationLink && (
                     <Button
                       variant="outline"
@@ -193,10 +197,12 @@ export default function JobDetails() {
               {candidates.length} candidatos para esta vaga
             </p>
           </div>
-          <Button onClick={() => navigate(`/jobs/${id}/candidates/new`)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Candidato
-          </Button>
+          {canCreateJobs && (
+            <Button onClick={() => navigate(`/jobs/${id}/candidates/new`)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Candidato
+            </Button>
+          )}
         </div>
 
         {candidates.length === 0 ? (
@@ -207,10 +213,12 @@ export default function JobDetails() {
               <p className="text-muted-foreground mb-4">
                 Adicione o primeiro candidato a esta vaga
               </p>
-              <Button onClick={() => navigate(`/jobs/${id}/candidates/new`)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Candidato
-              </Button>
+              {canCreateJobs && (
+                <Button onClick={() => navigate(`/jobs/${id}/candidates/new`)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Candidato
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
