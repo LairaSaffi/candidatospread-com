@@ -13,6 +13,7 @@ import NewJob from "./pages/NewJob";
 import EditJob from "./pages/EditJob";
 import JobDetails from "./pages/JobDetails";
 import NewCandidate from "./pages/NewCandidate";
+import CandidateDetails from "./pages/CandidateDetails";
 import EvaluateJob from "./pages/EvaluateJob";
 import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
@@ -68,6 +69,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <NewCandidate />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/jobs/:jobId/candidates/:candidateId"
+              element={
+                <AuthGuard>
+                  <CandidateDetails />
                 </AuthGuard>
               }
             />
