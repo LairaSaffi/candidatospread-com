@@ -32,10 +32,10 @@ serve(async (req) => {
 
     console.log(`Notificando avaliação: job_id=${job_id}, candidato=${candidate_name}, decisão=${decision}`);
 
-    // Buscar dados da vaga com os IDs dos responsáveis
+    // Buscar dados da vaga com os IDs dos responsáveis (não inclui responsible_manager que é do cliente)
     const { data: job, error: jobError } = await supabase
       .from("jobs")
-      .select("title, client, responsible_manager_id, spread_manager_id, commercial_responsible_id, recruiter_responsible_id")
+      .select("title, client, spread_manager_id, commercial_responsible_id, recruiter_responsible_id")
       .eq("id", job_id)
       .single();
 
@@ -46,9 +46,8 @@ serve(async (req) => {
 
     console.log("Dados da vaga:", job);
 
-    // Coletar IDs dos responsáveis
+    // Coletar IDs dos responsáveis internos (spread, comercial e recrutador)
     const responsibleIds: string[] = [];
-    if (job.responsible_manager_id) responsibleIds.push(job.responsible_manager_id);
     if (job.spread_manager_id) responsibleIds.push(job.spread_manager_id);
     if (job.commercial_responsible_id) responsibleIds.push(job.commercial_responsible_id);
     if (job.recruiter_responsible_id) responsibleIds.push(job.recruiter_responsible_id);

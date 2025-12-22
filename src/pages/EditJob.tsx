@@ -23,7 +23,7 @@ export default function EditJob() {
   const [description, setDescription] = useState("");
   const [workModel, setWorkModel] = useState("");
   const [client, setClient] = useState("");
-  const [responsibleManagerId, setResponsibleManagerId] = useState("");
+  const [responsibleManager, setResponsibleManager] = useState("");
   const [spreadManagerId, setSpreadManagerId] = useState("");
   const [commercialResponsibleId, setCommercialResponsibleId] = useState("");
   const [recruiterResponsibleId, setRecruiterResponsibleId] = useState("");
@@ -80,7 +80,7 @@ export default function EditJob() {
       setDescription(data.description || "");
       setWorkModel(data.work_model || "");
       setClient(data.client || "");
-      setResponsibleManagerId(data.responsible_manager_id || "");
+      setResponsibleManager(data.responsible_manager || "");
       setSpreadManagerId(data.spread_manager_id || "");
       setCommercialResponsibleId(data.commercial_responsible_id || "");
       setRecruiterResponsibleId(data.recruiter_responsible_id || "");
@@ -109,7 +109,7 @@ export default function EditJob() {
           description,
           work_model: workModel || null,
           client: client || null,
-          responsible_manager_id: responsibleManagerId || null,
+          responsible_manager: responsibleManager || null,
           spread_manager_id: spreadManagerId || null,
           commercial_responsible_id: commercialResponsibleId || null,
           recruiter_responsible_id: recruiterResponsibleId || null,
@@ -227,19 +227,13 @@ export default function EditJob() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="responsibleManager">Gestor Responsável</Label>
-                <Select value={responsibleManagerId} onValueChange={setResponsibleManagerId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um usuário" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map((u) => (
-                      <SelectItem key={u.id} value={u.id}>
-                        {u.full_name} ({u.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="responsibleManager">Gestor Responsável (Cliente)</Label>
+                <Input
+                  id="responsibleManager"
+                  value={responsibleManager}
+                  onChange={(e) => setResponsibleManager(e.target.value)}
+                  placeholder="Nome do gestor do cliente"
+                />
               </div>
 
               <div className="space-y-2">
