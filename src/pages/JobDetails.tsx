@@ -20,16 +20,22 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+interface UserProfile {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
 interface Job {
   id: string;
   title: string;
   description: string | null;
   work_model: string | null;
   client: string | null;
-  responsible_manager: string | null;
-  spread_manager: string | null;
-  commercial_responsible: string | null;
-  recruiter_responsible: string | null;
+  responsible_manager_id: string | null;
+  spread_manager_id: string | null;
+  commercial_responsible_id: string | null;
+  recruiter_responsible_id: string | null;
   status: "open" | "closed" | "on_hold";
 }
 
@@ -51,6 +57,7 @@ export default function JobDetails() {
   const [job, setJob] = useState<Job | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [evaluationLink, setEvaluationLink] = useState<EvaluationLink | null>(null);
+  const [users, setUsers] = useState<Record<string, UserProfile>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -73,6 +80,29 @@ export default function JobDetails() {
 
       if (jobError) throw jobError;
       setJob(jobData as Job);
+
+      // Buscar perfis dos responsáveis
+      const responsibleIds = [
+        jobData.responsible_manager_id,
+        jobData.spread_manager_id,
+        jobData.commercial_responsible_id,
+        jobData.recruiter_responsible_id,
+      ].filter(Boolean);
+
+      if (responsibleIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, full_name, email")
+          .in("id", responsibleIds);
+
+        if (!profilesError && profilesData) {
+          const usersMap: Record<string, UserProfile> = {};
+          profilesData.forEach((profile) => {
+            usersMap[profile.id] = profile;
+          });
+          setUsers(usersMap);
+        }
+      }
 
       const { data: candidatesData, error: candidatesError } = await supabase
         .from("candidates")
@@ -153,6 +183,11 @@ export default function JobDetails() {
     }
   };
 
+  const getUserName = (userId: string | null) => {
+    if (!userId) return null;
+    return users[userId]?.full_name || null;
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -189,10 +224,10 @@ export default function JobDetails() {
                 <CardDescription className="mt-2 space-y-1">
                   {job.work_model && <div>Modelo de Trabalho: {job.work_model}</div>}
                   {job.client && <div>Cliente: {job.client}</div>}
-                  {job.responsible_manager && <div>Gestor Responsável: {job.responsible_manager}</div>}
-                  {job.spread_manager && <div>Gestor Spread: {job.spread_manager}</div>}
-                  {job.commercial_responsible && <div>Responsável Comercial: {job.commercial_responsible}</div>}
-                  {job.recruiter_responsible && <div>Recrutador Responsável: {job.recruiter_responsible}</div>}
+                  {getUserName(job.responsible_manager_id) && <div>Gestor Responsável: {getUserName(job.responsible_manager_id)}</div>}
+                  {getUserName(job.spread_manager_id) && <div>Gestor Spread: {getUserName(job.spread_manager_id)}</div>}
+                  {getUserName(job.commercial_responsible_id) && <div>Responsável Comercial: {getUserName(job.commercial_responsible_id)}</div>}
+                  {getUserName(job.recruiter_responsible_id) && <div>Recrutador Responsável: {getUserName(job.recruiter_responsible_id)}</div>}
                 </CardDescription>
               </div>
               <div className="flex flex-col gap-2 items-end">

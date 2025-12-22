@@ -32,10 +32,10 @@ serve(async (req) => {
 
     console.log(`Notificando avaliação: job_id=${job_id}, candidato=${candidate_name}, decisão=${decision}`);
 
-    // Buscar dados da vaga
+    // Buscar dados da vaga com os IDs dos responsáveis
     const { data: job, error: jobError } = await supabase
       .from("jobs")
-      .select("title, client, responsible_manager, commercial_responsible, recruiter_responsible")
+      .select("title, client, responsible_manager_id, spread_manager_id, commercial_responsible_id, recruiter_responsible_id")
       .eq("id", job_id)
       .single();
 
@@ -46,21 +46,39 @@ serve(async (req) => {
 
     console.log("Dados da vaga:", job);
 
-    // Coletar e-mails dos responsáveis (considerando que são e-mails)
-    const emails: string[] = [];
-    
-    if (job.responsible_manager && job.responsible_manager.includes("@")) {
-      emails.push(job.responsible_manager);
-    }
-    if (job.commercial_responsible && job.commercial_responsible.includes("@")) {
-      emails.push(job.commercial_responsible);
-    }
-    if (job.recruiter_responsible && job.recruiter_responsible.includes("@")) {
-      emails.push(job.recruiter_responsible);
+    // Coletar IDs dos responsáveis
+    const responsibleIds: string[] = [];
+    if (job.responsible_manager_id) responsibleIds.push(job.responsible_manager_id);
+    if (job.spread_manager_id) responsibleIds.push(job.spread_manager_id);
+    if (job.commercial_responsible_id) responsibleIds.push(job.commercial_responsible_id);
+    if (job.recruiter_responsible_id) responsibleIds.push(job.recruiter_responsible_id);
+
+    // Remover duplicatas
+    const uniqueIds = [...new Set(responsibleIds)];
+
+    if (uniqueIds.length === 0) {
+      console.log("Nenhum responsável atribuído para notificar");
+      return new Response(
+        JSON.stringify({ success: true, message: "Nenhum responsável para notificar" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
+    // Buscar e-mails dos responsáveis na tabela profiles
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("email, full_name")
+      .in("id", uniqueIds);
+
+    if (profilesError) {
+      console.error("Erro ao buscar perfis:", profilesError);
+      throw new Error("Erro ao buscar perfis dos responsáveis");
+    }
+
+    const emails = profiles?.map(p => p.email).filter(Boolean) || [];
+
     if (emails.length === 0) {
-      console.log("Nenhum e-mail de responsável encontrado para notificar");
+      console.log("Nenhum e-mail encontrado para os responsáveis");
       return new Response(
         JSON.stringify({ success: true, message: "Nenhum e-mail para notificar" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

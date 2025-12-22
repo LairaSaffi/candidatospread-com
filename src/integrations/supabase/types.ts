@@ -138,14 +138,14 @@ export type Database = {
       jobs: {
         Row: {
           client: string | null
-          commercial_responsible: string | null
+          commercial_responsible_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
           id: string
-          recruiter_responsible: string | null
-          responsible_manager: string | null
-          spread_manager: string | null
+          recruiter_responsible_id: string | null
+          responsible_manager_id: string | null
+          spread_manager_id: string | null
           status: string
           title: string
           updated_at: string
@@ -153,14 +153,14 @@ export type Database = {
         }
         Insert: {
           client?: string | null
-          commercial_responsible?: string | null
+          commercial_responsible_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           id?: string
-          recruiter_responsible?: string | null
-          responsible_manager?: string | null
-          spread_manager?: string | null
+          recruiter_responsible_id?: string | null
+          responsible_manager_id?: string | null
+          spread_manager_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -168,20 +168,49 @@ export type Database = {
         }
         Update: {
           client?: string | null
-          commercial_responsible?: string | null
+          commercial_responsible_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           id?: string
-          recruiter_responsible?: string | null
-          responsible_manager?: string | null
-          spread_manager?: string | null
+          recruiter_responsible_id?: string | null
+          responsible_manager_id?: string | null
+          spread_manager_id?: string | null
           status?: string
           title?: string
           updated_at?: string
           work_model?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jobs_commercial_responsible_id_fkey"
+            columns: ["commercial_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_recruiter_responsible_id_fkey"
+            columns: ["recruiter_responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_responsible_manager_id_fkey"
+            columns: ["responsible_manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_spread_manager_id_fkey"
+            columns: ["spread_manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
