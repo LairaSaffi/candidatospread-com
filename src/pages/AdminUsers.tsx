@@ -56,17 +56,20 @@ export default function AdminUsers() {
     role: "" as string,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { isAdmin, session, user } = useAuth();
+  const { isAdmin, session, user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Aguardar o carregamento da autenticação antes de verificar permissões
+    if (authLoading) return;
+    
     if (!isAdmin) {
       navigate("/");
       return;
     }
     loadUsers();
-  }, [isAdmin]);
+  }, [isAdmin, authLoading]);
 
   const loadUsers = async () => {
     try {
