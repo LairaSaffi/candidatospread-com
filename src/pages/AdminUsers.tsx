@@ -110,16 +110,49 @@ export default function AdminUsers() {
 
     setCreating(true);
     try {
-      const response = await supabase.functions.invoke("create-user", {
+      const result = await supabase.functions.invoke("create-user", {
         body: formData,
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (result.error) {
+        let message = result.error.message;
+
+        // When the backend returns a non-2xx status, Supabase wraps it in a generic error.
+        // Try to extract the real message from the response body.
+        if (result.response instanceof Response) {
+          try {
+            const contentType = (result.response.headers.get("content-type") || "")
+              .split(";")[0]
+              .trim();
+
+            if (contentType === "application/json") {
+              const json = await result.response.clone().json();
+              if (typeof json?.error === "string" && json.error.trim()) {
+                message = json.error;
+              }
+            } else {
+              const text = await result.response.clone().text();
+              try {
+                const json = JSON.parse(text);
+                if (typeof json?.error === "string" && json.error.trim()) {
+                  message = json.error;
+                } else if (text.trim()) {
+                  message = text;
+                }
+              } catch {
+                if (text.trim()) message = text;
+              }
+            }
+          } catch {
+            // ignore parsing errors and fall back to the generic message
+          }
+        }
+
+        throw new Error(message);
       }
 
-      if (response.data.error) {
-        throw new Error(response.data.error);
+      if (result.data?.error) {
+        throw new Error(result.data.error);
       }
 
       toast({
