@@ -11,6 +11,7 @@ const corsHeaders = {
 
 interface NotifyRequest {
   job_id: string;
+  candidate_id?: string;
   candidate_name: string;
   decision: "interested" | "rejected";
   justification?: string;
@@ -28,9 +29,11 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { job_id, candidate_name, decision, justification, interview_schedule_options }: NotifyRequest = await req.json();
+    const { job_id, candidate_id, candidate_name, decision, justification, interview_schedule_options }: NotifyRequest = await req.json();
 
-    console.log(`Notificando avaliação: job_id=${job_id}, candidato=${candidate_name}, decisão=${decision}`);
+    console.log(
+      `Notificando avaliação: job_id=${job_id}, candidate_id=${candidate_id ?? "(n/a)"}, candidato=${candidate_name}, decisão=${decision}`
+    );
 
     // Buscar dados da vaga com os IDs dos responsáveis (não inclui responsible_manager que é do cliente)
     const { data: job, error: jobError } = await supabase
@@ -45,6 +48,24 @@ serve(async (req) => {
     }
 
     console.log("Dados da vaga:", job);
+
+    // Atualizar status do candidato (via service role) para refletir a decisão
+    const newStatus = decision === "interested" ? "approved" : "rejected";
+    if (candidate_id) {
+      const { error: candidateUpdateError } = await supabase
+        .from("candidates")
+        .update({ status: newStatus })
+        .eq("id", candidate_id);
+
+      if (candidateUpdateError) {
+        console.error("Erro ao atualizar status do candidato:", candidateUpdateError);
+        throw new Error("Erro ao atualizar status do candidato");
+      }
+
+      console.log(`Status do candidato atualizado para: ${newStatus}`);
+    } else {
+      console.log("candidate_id não informado; status do candidato não foi atualizado");
+    }
 
     // Coletar IDs dos responsáveis internos (spread, comercial e recrutador)
     const responsibleIds: string[] = [];

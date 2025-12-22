@@ -169,22 +169,24 @@ export default function EvaluateJob() {
       if (error) throw error;
 
       // Buscar nome do candidato para a notificação
-      const candidate = candidates.find(c => c.id === candidateId);
-      
-      // Enviar notificação por e-mail (não bloqueia a resposta ao usuário)
-      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-evaluation`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          job_id: job.id,
-          candidate_name: candidate?.name || "Candidato",
-          decision,
-          justification: justification || undefined,
-          interview_schedule_options: interviewScheduleOptions || undefined,
-        }),
-      }).catch(err => console.error("Erro ao enviar notificação:", err));
+      const candidate = candidates.find((c) => c.id === candidateId);
+
+      // Enviar notificação por e-mail e atualizar status (não bloqueia a resposta ao usuário)
+      void supabase.functions
+        .invoke("notify-evaluation", {
+          body: {
+            job_id: job.id,
+            candidate_id: candidateId,
+            candidate_name: candidate?.name || "Candidato",
+            decision,
+            justification: justification || undefined,
+            interview_schedule_options: interviewScheduleOptions || undefined,
+          },
+        })
+        .then(({ error }) => {
+          if (error) console.error("Erro ao enviar notificação:", error);
+        })
+        .catch((err) => console.error("Erro ao enviar notificação:", err));
 
       toast({
         title: "Avaliação enviada!",
