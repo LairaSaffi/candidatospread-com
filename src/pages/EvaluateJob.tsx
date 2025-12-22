@@ -33,6 +33,7 @@ interface CandidateEvaluation {
 interface CandidateFormState {
   rejectionReason: string;
   scheduleOptions: string;
+  pendingDecision: "approved" | "rejected" | null;
 }
 
 interface EvaluationData {
@@ -100,6 +101,7 @@ export default function EvaluateJob() {
           formMap[ev.candidate_id] = {
             rejectionReason: ev.justification || "",
             scheduleOptions: ev.interview_schedule_options || "",
+            pendingDecision: null,
           };
         });
         
@@ -129,7 +131,17 @@ export default function EvaluateJob() {
   };
 
   const getFormState = (candidateId: string): CandidateFormState => {
-    return formStates[candidateId] || { rejectionReason: "", scheduleOptions: "" };
+    return formStates[candidateId] || { rejectionReason: "", scheduleOptions: "", pendingDecision: null };
+  };
+
+  const setPendingDecision = (candidateId: string, decision: "approved" | "rejected" | null) => {
+    setFormStates(prev => ({
+      ...prev,
+      [candidateId]: {
+        ...getFormState(candidateId),
+        pendingDecision: decision,
+      },
+    }));
   };
 
   const handleEvaluation = async (
@@ -362,53 +374,99 @@ export default function EvaluateJob() {
                     </div>
                   ) : (
                     <div className="space-y-3 pt-2 border-t">
-                      <div className="space-y-2">
-                        <Label htmlFor={`rejection-${candidate.id}`} className="text-xs">
-                          Motivo da Reprovação (se reprovar)
-                        </Label>
-                        <Textarea
-                          id={`rejection-${candidate.id}`}
-                          value={formState.rejectionReason}
-                          onChange={(e) => updateFormState(candidate.id, "rejectionReason", e.target.value)}
-                          placeholder="Descreva o motivo da reprovação do CV..."
-                          rows={2}
-                          className="text-sm"
-                        />
-                      </div>
+                      {/* Botões iniciais - mostram quando não há decisão pendente */}
+                      {!formState.pendingDecision && (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => setPendingDecision(candidate.id, "rejected")}
+                            variant="destructive"
+                            size="sm"
+                            className="flex-1"
+                          >
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Reprovar candidato
+                          </Button>
+                          <Button
+                            onClick={() => setPendingDecision(candidate.id, "approved")}
+                            size="sm"
+                            className="flex-1 bg-success hover:bg-success/90"
+                          >
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Aprovar candidato
+                          </Button>
+                        </div>
+                      )}
 
-                      <div className="space-y-2">
-                        <Label htmlFor={`schedule-${candidate.id}`} className="text-xs">
-                          Opções de Horários para Entrevista (se aprovar)
-                        </Label>
-                        <Textarea
-                          id={`schedule-${candidate.id}`}
-                          value={formState.scheduleOptions}
-                          onChange={(e) => updateFormState(candidate.id, "scheduleOptions", e.target.value)}
-                          placeholder="Ex: Segunda 14h, Terça 10h, Quarta 16h..."
-                          rows={2}
-                          className="text-sm"
-                        />
-                      </div>
+                      {/* Formulário de reprovação */}
+                      {formState.pendingDecision === "rejected" && (
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <Label htmlFor={`rejection-${candidate.id}`} className="text-sm">
+                              Gostaria de nos dizer o motivo da reprovação? Nos permitirá te entregar o candidato desejado da próxima vez.
+                            </Label>
+                            <Textarea
+                              id={`rejection-${candidate.id}`}
+                              value={formState.rejectionReason}
+                              onChange={(e) => updateFormState(candidate.id, "rejectionReason", e.target.value)}
+                              placeholder="Descreva o motivo (opcional)..."
+                              rows={3}
+                              className="text-sm"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => setPendingDecision(candidate.id, null)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              Voltar
+                            </Button>
+                            <Button
+                              onClick={() => handleEvaluation(candidate.id, "rejected", formState.rejectionReason)}
+                              variant="destructive"
+                              size="sm"
+                              className="flex-1"
+                            >
+                              Confirmar reprovação
+                            </Button>
+                          </div>
+                        </div>
+                      )}
 
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleEvaluation(candidate.id, "rejected", formState.rejectionReason)}
-                          variant="destructive"
-                          size="sm"
-                          className="flex-1"
-                        >
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Reprovar CV
-                        </Button>
-                        <Button
-                          onClick={() => handleEvaluation(candidate.id, "approved", undefined, formState.scheduleOptions)}
-                          size="sm"
-                          className="flex-1 bg-success hover:bg-success/90"
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Aprovar para Entrevista
-                        </Button>
-                      </div>
+                      {/* Formulário de aprovação */}
+                      {formState.pendingDecision === "approved" && (
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <Label htmlFor={`schedule-${candidate.id}`} className="text-sm">
+                              Gostaria de sugerir horários para agendamento da entrevista?
+                            </Label>
+                            <Textarea
+                              id={`schedule-${candidate.id}`}
+                              value={formState.scheduleOptions}
+                              onChange={(e) => updateFormState(candidate.id, "scheduleOptions", e.target.value)}
+                              placeholder="Ex: Segunda 14h, Terça 10h, Quarta 16h... (opcional)"
+                              rows={3}
+                              className="text-sm"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => setPendingDecision(candidate.id, null)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              Voltar
+                            </Button>
+                            <Button
+                              onClick={() => handleEvaluation(candidate.id, "approved", undefined, formState.scheduleOptions)}
+                              size="sm"
+                              className="flex-1 bg-success hover:bg-success/90"
+                            >
+                              Confirmar aprovação
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
