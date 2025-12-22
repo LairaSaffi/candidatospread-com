@@ -144,7 +144,7 @@ export type Database = {
           description: string | null
           id: string
           recruiter_responsible_id: string | null
-          responsible_manager_id: string | null
+          responsible_manager: string | null
           spread_manager_id: string | null
           status: string
           title: string
@@ -159,7 +159,7 @@ export type Database = {
           description?: string | null
           id?: string
           recruiter_responsible_id?: string | null
-          responsible_manager_id?: string | null
+          responsible_manager?: string | null
           spread_manager_id?: string | null
           status?: string
           title: string
@@ -174,7 +174,7 @@ export type Database = {
           description?: string | null
           id?: string
           recruiter_responsible_id?: string | null
-          responsible_manager_id?: string | null
+          responsible_manager?: string | null
           spread_manager_id?: string | null
           status?: string
           title?: string
@@ -192,13 +192,6 @@ export type Database = {
           {
             foreignKeyName: "jobs_recruiter_responsible_id_fkey"
             columns: ["recruiter_responsible_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jobs_responsible_manager_id_fkey"
-            columns: ["responsible_manager_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

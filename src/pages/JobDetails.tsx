@@ -32,7 +32,7 @@ interface Job {
   description: string | null;
   work_model: string | null;
   client: string | null;
-  responsible_manager_id: string | null;
+  responsible_manager: string | null;
   spread_manager_id: string | null;
   commercial_responsible_id: string | null;
   recruiter_responsible_id: string | null;
@@ -81,9 +81,8 @@ export default function JobDetails() {
       if (jobError) throw jobError;
       setJob(jobData as Job);
 
-      // Buscar perfis dos responsáveis
+      // Buscar perfis dos responsáveis (não inclui responsible_manager que é texto)
       const responsibleIds = [
-        jobData.responsible_manager_id,
         jobData.spread_manager_id,
         jobData.commercial_responsible_id,
         jobData.recruiter_responsible_id,
@@ -224,7 +223,7 @@ export default function JobDetails() {
                 <CardDescription className="mt-2 space-y-1">
                   {job.work_model && <div>Modelo de Trabalho: {job.work_model}</div>}
                   {job.client && <div>Cliente: {job.client}</div>}
-                  {getUserName(job.responsible_manager_id) && <div>Gestor Responsável: {getUserName(job.responsible_manager_id)}</div>}
+                  {job.responsible_manager && <div>Gestor Responsável (Cliente): {job.responsible_manager}</div>}
                   {getUserName(job.spread_manager_id) && <div>Gestor Spread: {getUserName(job.spread_manager_id)}</div>}
                   {getUserName(job.commercial_responsible_id) && <div>Responsável Comercial: {getUserName(job.commercial_responsible_id)}</div>}
                   {getUserName(job.recruiter_responsible_id) && <div>Recrutador Responsável: {getUserName(job.recruiter_responsible_id)}</div>}
