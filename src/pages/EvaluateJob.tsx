@@ -25,7 +25,7 @@ interface Candidate {
 }
 
 interface CandidateEvaluation {
-  decision: "approved" | "rejected" | null;
+  decision: "interested" | "rejected" | null;
   justification: string | null;
   interview_schedule_options?: string | null;
 }
@@ -33,7 +33,7 @@ interface CandidateEvaluation {
 interface CandidateFormState {
   rejectionReason: string;
   scheduleOptions: string;
-  pendingDecision: "approved" | "rejected" | null;
+  pendingDecision: "interested" | "rejected" | null;
 }
 
 interface EvaluationData {
@@ -94,7 +94,7 @@ export default function EvaluateJob() {
         
         evalData.evaluations.forEach((ev) => {
           evalMap[ev.candidate_id] = {
-            decision: ev.decision as "approved" | "rejected" | null,
+            decision: ev.decision as "interested" | "rejected" | null,
             justification: ev.justification,
             interview_schedule_options: ev.interview_schedule_options,
           };
@@ -134,7 +134,7 @@ export default function EvaluateJob() {
     return formStates[candidateId] || { rejectionReason: "", scheduleOptions: "", pendingDecision: null };
   };
 
-  const setPendingDecision = (candidateId: string, decision: "approved" | "rejected" | null) => {
+  const setPendingDecision = (candidateId: string, decision: "interested" | "rejected" | null) => {
     setFormStates(prev => ({
       ...prev,
       [candidateId]: {
@@ -146,7 +146,7 @@ export default function EvaluateJob() {
 
   const handleEvaluation = async (
     candidateId: string,
-    decision: "approved" | "rejected",
+    decision: "interested" | "rejected",
     justification?: string,
     interviewScheduleOptions?: string
   ) => {
@@ -365,7 +365,7 @@ export default function EvaluateJob() {
                   {evaluation?.decision ? (
                     <div className="space-y-2 pt-2 border-t">
                       <div className="flex items-center gap-2">
-                        {evaluation.decision === "approved" ? (
+                        {evaluation.decision === "interested" ? (
                           <>
                             <CheckCircle className="h-4 w-4 text-success" />
                             <Badge className="bg-success text-success-foreground">
@@ -384,7 +384,7 @@ export default function EvaluateJob() {
                           <strong>Motivo da Reprovação:</strong> {evaluation.justification}
                         </div>
                       )}
-                      {evaluation.decision === "approved" && evaluation.interview_schedule_options && (
+                      {evaluation.decision === "interested" && evaluation.interview_schedule_options && (
                         <div className="text-xs text-muted-foreground bg-muted p-2 rounded-md">
                           <strong>Opções de Horários:</strong> {evaluation.interview_schedule_options}
                         </div>
@@ -405,7 +405,7 @@ export default function EvaluateJob() {
                             Reprovar candidato
                           </Button>
                           <Button
-                            onClick={() => setPendingDecision(candidate.id, "approved")}
+                            onClick={() => setPendingDecision(candidate.id, "interested")}
                             size="sm"
                             className="flex-1 bg-success hover:bg-success/90"
                           >
@@ -452,7 +452,7 @@ export default function EvaluateJob() {
                       )}
 
                       {/* Formulário de aprovação */}
-                      {formState.pendingDecision === "approved" && (
+                      {formState.pendingDecision === "interested" && (
                         <div className="space-y-3">
                           <div className="space-y-2">
                             <Label htmlFor={`schedule-${candidate.id}`} className="text-sm">
@@ -476,7 +476,7 @@ export default function EvaluateJob() {
                               Voltar
                             </Button>
                             <Button
-                              onClick={() => handleEvaluation(candidate.id, "approved", undefined, formState.scheduleOptions)}
+                              onClick={() => handleEvaluation(candidate.id, "interested", undefined, formState.scheduleOptions)}
                               size="sm"
                               className="flex-1 bg-success hover:bg-success/90"
                             >

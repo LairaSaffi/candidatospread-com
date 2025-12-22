@@ -12,7 +12,7 @@ const corsHeaders = {
 interface NotifyRequest {
   job_id: string;
   candidate_name: string;
-  decision: "approved" | "rejected";
+  decision: "interested" | "rejected";
   justification?: string;
   interview_schedule_options?: string;
 }
@@ -86,8 +86,8 @@ serve(async (req) => {
 
     console.log("E-mails para notificar:", emails);
 
-    const decisionText = decision === "approved" ? "APROVADO" : "REPROVADO";
-    const decisionColor = decision === "approved" ? "#22c55e" : "#ef4444";
+    const decisionText = decision === "interested" ? "APROVADO" : "REPROVADO";
+    const decisionColor = decision === "interested" ? "#22c55e" : "#ef4444";
 
     let detailsHtml = "";
     if (decision === "rejected" && justification) {
@@ -97,7 +97,7 @@ serve(async (req) => {
           <p style="margin: 8px 0 0 0;">${justification}</p>
         </div>
       `;
-    } else if (decision === "approved" && interview_schedule_options) {
+    } else if (decision === "interested" && interview_schedule_options) {
       detailsHtml = `
         <div style="margin-top: 16px; padding: 12px; background-color: #f0fdf4; border-radius: 8px;">
           <strong>Horários sugeridos para entrevista:</strong>
