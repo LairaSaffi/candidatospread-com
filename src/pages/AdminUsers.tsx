@@ -73,26 +73,32 @@ export default function AdminUsers() {
 
   const loadUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          full_name,
-          email,
-          is_active,
-          created_at,
-          user_roles (role)
-        `)
-        .order("created_at", { ascending: false });
+      // Buscar perfis e roles separadamente (não há FK direta entre profiles e user_roles)
+      const [profilesResult, rolesResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, full_name, email, is_active, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("user_roles")
+          .select("user_id, role")
+      ]);
 
-      if (error) throw error;
+      if (profilesResult.error) throw profilesResult.error;
+      if (rolesResult.error) throw rolesResult.error;
 
-      const usersWithRoles = data.map((profile: any) => ({
+      // Criar mapa de roles por user_id
+      const rolesMap = new Map<string, string>();
+      rolesResult.data?.forEach((r) => {
+        rolesMap.set(r.user_id, r.role);
+      });
+
+      const usersWithRoles = profilesResult.data.map((profile) => ({
         id: profile.id,
         full_name: profile.full_name,
         email: profile.email,
         is_active: profile.is_active ?? true,
-        role: profile.user_roles?.[0]?.role || "sem papel",
+        role: rolesMap.get(profile.id) || "sem papel",
         created_at: profile.created_at,
       }));
 
