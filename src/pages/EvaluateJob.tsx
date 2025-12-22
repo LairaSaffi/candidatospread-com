@@ -6,9 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, FileText, Briefcase, ExternalLink } from "lucide-react";
+import { CheckCircle, XCircle, FileText, Briefcase, ExternalLink, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { openSignedFile } from "@/lib/storage";
 
 interface Job {
   id: string;
@@ -288,7 +287,16 @@ export default function EvaluateJob() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => openSignedFile("cvs", candidate.cv_url!)}
+                        onClick={() => {
+                          // Verificar se é URL completa ou path relativo
+                          if (candidate.cv_url!.startsWith("http")) {
+                            window.open(candidate.cv_url!, "_blank");
+                          } else {
+                            // Construir URL pública do storage
+                            const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/cvs/${candidate.cv_url}`;
+                            window.open(url, "_blank");
+                          }
+                        }}
                       >
                         <FileText className="h-3 w-3 mr-1" />
                         Ver CV
@@ -299,7 +307,14 @@ export default function EvaluateJob() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => openSignedFile("technical-tests", candidate.technical_test_url!)}
+                        onClick={() => {
+                          if (candidate.technical_test_url!.startsWith("http")) {
+                            window.open(candidate.technical_test_url!, "_blank");
+                          } else {
+                            const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/technical-tests/${candidate.technical_test_url}`;
+                            window.open(url, "_blank");
+                          }
+                        }}
                       >
                         <FileText className="h-3 w-3 mr-1" />
                         Ver Teste
