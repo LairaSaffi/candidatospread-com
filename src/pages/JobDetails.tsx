@@ -4,10 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ArrowLeft, Plus, FileText, Link as LinkIcon, Pencil } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Link as LinkIcon, Pencil, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Job {
   id: string;
@@ -43,7 +54,8 @@ export default function JobDetails() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { canEditJobs, canCreateJobs } = useAuth();
+  const { canEditJobs, canCreateJobs, isAdmin } = useAuth();
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -114,6 +126,33 @@ export default function JobDetails() {
     });
   };
 
+  const handleDeleteJob = async () => {
+    if (!id) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("jobs")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Vaga excluída",
+        description: "A vaga foi excluída com sucesso.",
+      });
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir vaga",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -158,7 +197,7 @@ export default function JobDetails() {
               </div>
               <div className="flex flex-col gap-2 items-end">
                 <StatusBadge status={job.status} />
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap justify-end">
                   {canEditJobs && (
                     <Button
                       variant="outline"
@@ -168,6 +207,38 @@ export default function JobDetails() {
                       <Pencil className="h-4 w-4 mr-2" />
                       Editar
                     </Button>
+                  )}
+                  {isAdmin && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={deleting}
+                        >
+                          {deleting ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 mr-2" />
+                          )}
+                          Excluir
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir vaga?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. A vaga "{job.title}" e todos os candidatos associados serão excluídos permanentemente.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeleteJob} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
                   {evaluationLink && (
                     <Button
