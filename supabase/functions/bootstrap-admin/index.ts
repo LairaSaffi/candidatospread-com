@@ -1,9 +1,26 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  if (!requestOrigin) return "";
+  
+  const allowedPatterns = [
+    /^https:\/\/.*\.lovable\.app$/,
+    /^https:\/\/.*\.lovableproject\.com$/,
+    /^http:\/\/localhost(:\d+)?$/,
+  ];
+  
+  if (allowedPatterns.some(pattern => pattern.test(requestOrigin))) {
+    return requestOrigin;
+  }
+  
+  return "";
 };
+
+const getCorsHeaders = (requestOrigin: string | null) => ({
+  "Access-Control-Allow-Origin": getAllowedOrigin(requestOrigin),
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Credentials": "true",
+});
 
 interface BootstrapRequest {
   email: string;
@@ -12,6 +29,9 @@ interface BootstrapRequest {
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -23,7 +43,6 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Verificar se já existe algum usuário admin
     const { data: existingAdmins, error: checkError } = await supabaseAdmin
       .from("user_roles")
       .select("id")
@@ -32,19 +51,21 @@ Deno.serve(async (req) => {
 
     if (checkError) {
       console.error("Erro ao verificar admins:", checkError);
-      throw checkError;
+      return new Response(
+        JSON.stringify({ error: "Erro ao verificar configuração do sistema" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     if (existingAdmins && existingAdmins.length > 0) {
       return new Response(
-        JSON.stringify({ error: "Já existe um administrador no sistema. Use o painel de admin para criar novos usuários." }),
+        JSON.stringify({ error: "Sistema já configurado. Use o painel de admin para criar novos usuários." }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const { email, password, full_name }: BootstrapRequest = await req.json();
 
-    // Validação básica
     if (!email || !password || !full_name) {
       return new Response(
         JSON.stringify({ error: "Todos os campos são obrigatórios" }),
@@ -59,7 +80,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Criar usuário admin no Auth
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -69,12 +89,11 @@ Deno.serve(async (req) => {
     if (createError) {
       console.error("Erro ao criar usuário:", createError);
       return new Response(
-        JSON.stringify({ error: createError.message }),
+        JSON.stringify({ error: "Não foi possível criar o usuário. Verifique os dados informados." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Criar perfil
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .insert({
@@ -87,12 +106,11 @@ Deno.serve(async (req) => {
       console.error("Erro ao criar perfil:", profileError);
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
       return new Response(
-        JSON.stringify({ error: "Erro ao criar perfil" }),
+        JSON.stringify({ error: "Erro ao configurar usuário. Tente novamente." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Criar papel admin
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
       .insert({
@@ -104,7 +122,7 @@ Deno.serve(async (req) => {
       console.error("Erro ao criar papel:", roleError);
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
       return new Response(
-        JSON.stringify({ error: "Erro ao atribuir papel de admin" }),
+        JSON.stringify({ error: "Erro ao configurar permissões. Tente novamente." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
