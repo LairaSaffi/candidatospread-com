@@ -11,19 +11,26 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft } from "lucide-react";
 
+interface UserProfile {
+  id: string;
+  full_name: string;
+  email: string;
+}
+
 export default function NewJob() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [workModel, setWorkModel] = useState("");
   const [client, setClient] = useState("");
-  const [responsibleManager, setResponsibleManager] = useState("");
-  const [spreadManager, setSpreadManager] = useState("");
-  const [commercialResponsible, setCommercialResponsible] = useState("");
-  const [recruiterResponsible, setRecruiterResponsible] = useState("");
+  const [responsibleManagerId, setResponsibleManagerId] = useState("");
+  const [spreadManagerId, setSpreadManagerId] = useState("");
+  const [commercialResponsibleId, setCommercialResponsibleId] = useState("");
+  const [recruiterResponsibleId, setRecruiterResponsibleId] = useState("");
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { canCreateJobs, user } = useAuth();
+  const { canCreateJobs, user, isAdmin } = useAuth();
 
   useEffect(() => {
     if (!canCreateJobs) {
@@ -33,8 +40,25 @@ export default function NewJob() {
         variant: "destructive",
       });
       navigate("/");
+    } else {
+      loadUsers();
     }
   }, [canCreateJobs]);
+
+  const loadUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .eq("is_active", true)
+        .order("full_name");
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar usuários:", error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,10 +72,10 @@ export default function NewJob() {
         description,
         work_model: workModel || null,
         client: client || null,
-        responsible_manager: responsibleManager || null,
-        spread_manager: spreadManager || null,
-        commercial_responsible: commercialResponsible || null,
-        recruiter_responsible: recruiterResponsible || null,
+        responsible_manager_id: responsibleManagerId || null,
+        spread_manager_id: spreadManagerId || null,
+        commercial_responsible_id: commercialResponsibleId || null,
+        recruiter_responsible_id: recruiterResponsibleId || null,
         created_by: user.id,
         status: "open",
       });
@@ -145,42 +169,66 @@ export default function NewJob() {
 
               <div className="space-y-2">
                 <Label htmlFor="responsibleManager">Gestor Responsável</Label>
-                <Input
-                  id="responsibleManager"
-                  value={responsibleManager}
-                  onChange={(e) => setResponsibleManager(e.target.value)}
-                  placeholder="Nome do gestor responsável"
-                />
+                <Select value={responsibleManagerId} onValueChange={setResponsibleManagerId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.full_name} ({u.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="spreadManager">Gestor Spread</Label>
-                <Input
-                  id="spreadManager"
-                  value={spreadManager}
-                  onChange={(e) => setSpreadManager(e.target.value)}
-                  placeholder="Nome do gestor Spread"
-                />
+                <Select value={spreadManagerId} onValueChange={setSpreadManagerId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.full_name} ({u.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="commercialResponsible">Responsável Comercial</Label>
-                <Input
-                  id="commercialResponsible"
-                  value={commercialResponsible}
-                  onChange={(e) => setCommercialResponsible(e.target.value)}
-                  placeholder="Nome do responsável comercial"
-                />
+                <Select value={commercialResponsibleId} onValueChange={setCommercialResponsibleId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.full_name} ({u.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="recruiterResponsible">Recrutador Responsável</Label>
-                <Input
-                  id="recruiterResponsible"
-                  value={recruiterResponsible}
-                  onChange={(e) => setRecruiterResponsible(e.target.value)}
-                  placeholder="Nome do recrutador responsável"
-                />
+                <Select value={recruiterResponsibleId} onValueChange={setRecruiterResponsibleId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.full_name} ({u.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex gap-3 pt-4">
