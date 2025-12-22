@@ -1,9 +1,26 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  if (!requestOrigin) return "";
+  
+  const allowedPatterns = [
+    /^https:\/\/.*\.lovable\.app$/,
+    /^https:\/\/.*\.lovableproject\.com$/,
+    /^http:\/\/localhost(:\d+)?$/,
+  ];
+  
+  if (allowedPatterns.some(pattern => pattern.test(requestOrigin))) {
+    return requestOrigin;
+  }
+  
+  return "";
 };
+
+const getCorsHeaders = (requestOrigin: string | null) => ({
+  "Access-Control-Allow-Origin": getAllowedOrigin(requestOrigin),
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Credentials": "true",
+});
 
 interface CreateUserRequest {
   email: string;
@@ -13,6 +30,9 @@ interface CreateUserRequest {
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -24,7 +44,6 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Verificar se o usuário é admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
@@ -37,13 +56,13 @@ Deno.serve(async (req) => {
     const { data: { user: callingUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !callingUser) {
-      return new Response(JSON.stringify({ error: "Token inválido" }), {
+      console.error("Token validation failed:", authError);
+      return new Response(JSON.stringify({ error: "Sessão inválida. Faça login novamente." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Verificar se é admin
     const { data: adminCheck } = await supabaseAdmin
       .from("user_roles")
       .select("role")
@@ -60,7 +79,6 @@ Deno.serve(async (req) => {
 
     const { email, password, full_name, role }: CreateUserRequest = await req.json();
 
-    // Validação básica
     if (!email || !password || !full_name || !role) {
       return new Response(JSON.stringify({ error: "Todos os campos são obrigatórios" }), {
         status: 400,
@@ -75,7 +93,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Criar usuário no Auth
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -84,13 +101,12 @@ Deno.serve(async (req) => {
 
     if (createError) {
       console.error("Erro ao criar usuário:", createError);
-      return new Response(JSON.stringify({ error: createError.message }), {
+      return new Response(JSON.stringify({ error: "Não foi possível criar o usuário. Verifique os dados informados." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Criar perfil
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .insert({
@@ -101,15 +117,13 @@ Deno.serve(async (req) => {
 
     if (profileError) {
       console.error("Erro ao criar perfil:", profileError);
-      // Rollback: deletar usuário criado
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-      return new Response(JSON.stringify({ error: "Erro ao criar perfil" }), {
+      return new Response(JSON.stringify({ error: "Erro ao configurar usuário. Tente novamente." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Criar papel
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
       .insert({
@@ -119,9 +133,8 @@ Deno.serve(async (req) => {
 
     if (roleError) {
       console.error("Erro ao criar papel:", roleError);
-      // Rollback
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-      return new Response(JSON.stringify({ error: "Erro ao atribuir papel" }), {
+      return new Response(JSON.stringify({ error: "Erro ao configurar permissões. Tente novamente." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
