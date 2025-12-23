@@ -164,10 +164,16 @@ export default function Dashboard() {
               </Badge>
             </div>
             {isAdmin && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/admin/users")}>
-                <Settings className="h-4 w-4 mr-2" />
-                Usuários
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin/candidates")}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Candidatos
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin/users")}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Usuários
+                </Button>
+              </>
             )}
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
