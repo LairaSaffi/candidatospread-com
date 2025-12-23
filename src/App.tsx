@@ -16,6 +16,7 @@ import NewCandidate from "./pages/NewCandidate";
 import CandidateDetails from "./pages/CandidateDetails";
 import EvaluateJob from "./pages/EvaluateJob";
 import AdminUsers from "./pages/AdminUsers";
+import AdminCandidates from "./pages/AdminCandidates";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -85,6 +86,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <AdminUsers />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/admin/candidates"
+              element={
+                <AuthGuard>
+                  <AdminCandidates />
                 </AuthGuard>
               }
             />
