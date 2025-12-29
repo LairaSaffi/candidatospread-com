@@ -24,6 +24,8 @@ interface CandidateWithDetails {
   responsible_manager: string | null;
   recruiter_name: string | null;
   evaluation_decision: string | null;
+  evaluated_by_user_id: string | null;
+  evaluator_name: string | null;
 }
 
 const statusLabels: Record<string, string> = {
@@ -111,38 +113,70 @@ export default function AdminCandidates() {
 
       // Buscar avaliações dos candidatos
       const candidateIds = candidatesData?.map((c: any) => c.id) || [];
-      let evaluations: Record<string, string> = {};
+      let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null }> = {};
       
       if (candidateIds.length > 0) {
         const { data: evaluationsData } = await supabase
           .from("candidate_evaluations")
-          .select("candidate_id, decision")
+          .select("candidate_id, decision, evaluated_by_user_id")
           .in("candidate_id", candidateIds)
           .not("decision", "is", null);
 
         if (evaluationsData) {
-          evaluations = evaluationsData.reduce((acc: Record<string, string>, e) => {
-            acc[e.candidate_id] = e.decision!;
+          evaluations = evaluationsData.reduce((acc: Record<string, { decision: string; evaluated_by_user_id: string | null }>, e) => {
+            acc[e.candidate_id] = { 
+              decision: e.decision!, 
+              evaluated_by_user_id: e.evaluated_by_user_id 
+            };
+            return acc;
+          }, {});
+        }
+      }
+
+      // Buscar nomes dos avaliadores internos
+      const evaluatorIds = Object.values(evaluations)
+        .map((e) => e.evaluated_by_user_id)
+        .filter((id): id is string => Boolean(id));
+      
+      const uniqueEvaluatorIds = [...new Set(evaluatorIds)];
+      let evaluatorProfiles: Record<string, string> = {};
+      
+      if (uniqueEvaluatorIds.length > 0) {
+        const { data: evalProfilesData } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", uniqueEvaluatorIds);
+
+        if (evalProfilesData) {
+          evaluatorProfiles = evalProfilesData.reduce((acc: Record<string, string>, p) => {
+            acc[p.id] = p.full_name;
             return acc;
           }, {});
         }
       }
 
       // Montar dados finais
-      const formattedCandidates: CandidateWithDetails[] = candidatesData?.map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        status: c.status,
-        created_at: c.created_at,
-        job_id: c.job_id,
-        job_title: c.jobs?.title || "Vaga não encontrada",
-        client: c.jobs?.client || null,
-        responsible_manager: c.jobs?.responsible_manager || null,
-        recruiter_name: c.jobs?.recruiter_responsible_id 
-          ? recruiterProfiles[c.jobs.recruiter_responsible_id] || null 
-          : null,
-        evaluation_decision: evaluations[c.id] || null,
-      })) || [];
+      const formattedCandidates: CandidateWithDetails[] = candidatesData?.map((c: any) => {
+        const evalData = evaluations[c.id];
+        return {
+          id: c.id,
+          name: c.name,
+          status: c.status,
+          created_at: c.created_at,
+          job_id: c.job_id,
+          job_title: c.jobs?.title || "Vaga não encontrada",
+          client: c.jobs?.client || null,
+          responsible_manager: c.jobs?.responsible_manager || null,
+          recruiter_name: c.jobs?.recruiter_responsible_id 
+            ? recruiterProfiles[c.jobs.recruiter_responsible_id] || null 
+            : null,
+          evaluation_decision: evalData?.decision || null,
+          evaluated_by_user_id: evalData?.evaluated_by_user_id || null,
+          evaluator_name: evalData?.evaluated_by_user_id 
+            ? evaluatorProfiles[evalData.evaluated_by_user_id] || null 
+            : null,
+        };
+      }) || [];
 
       setCandidates(formattedCandidates);
 
@@ -229,6 +263,7 @@ export default function AdminCandidates() {
         "Recrutador",
         "Data de Envio",
         "Status Avaliação",
+        "Avaliado por",
       ];
 
       const rows = filteredCandidates.map((c) => [
@@ -241,6 +276,9 @@ export default function AdminCandidates() {
         c.evaluation_decision 
           ? evaluationLabels[c.evaluation_decision] || c.evaluation_decision
           : statusLabels[c.status] || c.status,
+        c.evaluated_by_user_id 
+          ? (c.evaluator_name || "Usuário interno")
+          : (c.evaluation_decision ? "Link externo" : "-"),
       ]);
 
       // Montar CSV com BOM para UTF-8
@@ -387,6 +425,7 @@ export default function AdminCandidates() {
                       <TableHead>Recrutador</TableHead>
                       <TableHead>Data de Envio</TableHead>
                       <TableHead>Status Avaliação</TableHead>
+                      <TableHead>Avaliado por</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -409,6 +448,15 @@ export default function AdminCandidates() {
                             ? getEvaluationBadge(candidate.evaluation_decision)
                             : getStatusBadge(candidate.status)
                           }
+                        </TableCell>
+                        <TableCell>
+                          {candidate.evaluated_by_user_id ? (
+                            <span className="text-sm">{candidate.evaluator_name || "Usuário interno"}</span>
+                          ) : candidate.evaluation_decision ? (
+                            <span className="text-sm text-muted-foreground">Link externo</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

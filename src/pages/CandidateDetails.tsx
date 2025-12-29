@@ -3,10 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ArrowLeft, FileText, Download, Loader2, ExternalLink } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, ExternalLink, CheckCircle, XCircle, User, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { openSignedFile } from "@/lib/storage";
+import { InternalEvaluationDialog } from "@/components/InternalEvaluationDialog";
+import { useAuth } from "@/hooks/useAuth";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Candidate {
   id: string;
@@ -24,14 +29,26 @@ interface Job {
   title: string;
 }
 
+interface CandidateEvaluation {
+  id: string;
+  decision: string | null;
+  justification: string | null;
+  interview_schedule_options: string | null;
+  evaluated_at: string | null;
+  evaluated_by_user_id: string | null;
+  evaluator_name?: string | null;
+}
+
 export default function CandidateDetails() {
   const { jobId, candidateId } = useParams();
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [job, setJob] = useState<Job | null>(null);
+  const [evaluation, setEvaluation] = useState<CandidateEvaluation | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingFile, setOpeningFile] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (jobId && candidateId) {
@@ -59,6 +76,37 @@ export default function CandidateDetails() {
 
       setCandidate(candidateResult.data as Candidate);
       setJob(jobResult.data);
+
+      // Buscar avaliação do candidato
+      if (candidateResult.data) {
+        const { data: evalData } = await supabase
+          .from("candidate_evaluations")
+          .select("id, decision, justification, interview_schedule_options, evaluated_at, evaluated_by_user_id")
+          .eq("candidate_id", candidateId)
+          .not("decision", "is", null)
+          .order("evaluated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (evalData) {
+          let evaluatorName: string | null = null;
+          
+          if (evalData.evaluated_by_user_id) {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", evalData.evaluated_by_user_id)
+              .maybeSingle();
+            
+            evaluatorName = profileData?.full_name || null;
+          }
+
+          setEvaluation({
+            ...evalData,
+            evaluator_name: evaluatorName,
+          });
+        }
+      }
     } catch (error: any) {
       toast({
         title: "Erro ao carregar dados",
@@ -220,6 +268,97 @@ export default function CandidateDetails() {
             </CardContent>
           </Card>
         )}
+
+        {/* Avaliação */}
+        <Card className="mt-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Avaliação
+              </CardTitle>
+              {user && (
+                <InternalEvaluationDialog
+                  candidateId={candidate.id}
+                  candidateName={candidate.name}
+                  jobId={job.id}
+                  currentDecision={evaluation?.decision}
+                  currentJustification={evaluation?.justification}
+                  currentScheduleOptions={evaluation?.interview_schedule_options}
+                  onEvaluationComplete={loadData}
+                />
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {evaluation ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  {evaluation.decision === "interested" ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-success" />
+                      <Badge className="bg-success text-success-foreground">
+                        Aprovado para Entrevista
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-5 w-5 text-destructive" />
+                      <Badge variant="destructive">Reprovado</Badge>
+                    </>
+                  )}
+                </div>
+
+                <div className="grid gap-3 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    {evaluation.evaluated_by_user_id ? (
+                      <>
+                        <User className="h-4 w-4" />
+                        <span>Avaliado por: <strong className="text-foreground">{evaluation.evaluator_name || "Usuário interno"}</strong></span>
+                      </>
+                    ) : (
+                      <>
+                        <Link2 className="h-4 w-4" />
+                        <span>Avaliado via <strong className="text-foreground">link externo</strong></span>
+                      </>
+                    )}
+                  </div>
+                  
+                  {evaluation.evaluated_at && (
+                    <div className="text-muted-foreground">
+                      Data: {format(new Date(evaluation.evaluated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    </div>
+                  )}
+                </div>
+
+                {evaluation.decision === "rejected" && evaluation.justification && (
+                  <div className="bg-muted p-3 rounded-md">
+                    <p className="text-sm font-medium mb-1">Motivo da reprovação:</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {evaluation.justification}
+                    </p>
+                  </div>
+                )}
+
+                {evaluation.decision === "interested" && evaluation.interview_schedule_options && (
+                  <div className="bg-muted p-3 rounded-md">
+                    <p className="text-sm font-medium mb-1">Sugestão de horários:</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {evaluation.interview_schedule_options}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <p>Nenhuma avaliação registrada ainda.</p>
+                {user && (
+                  <p className="text-sm mt-1">Clique em "Avaliar" para registrar sua avaliação.</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
