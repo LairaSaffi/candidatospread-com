@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           decision: string | null
           evaluated_at: string | null
+          evaluated_by_user_id: string | null
           id: string
           interview_schedule_options: string | null
           job_evaluation_link_id: string
@@ -30,6 +31,7 @@ export type Database = {
           created_at?: string
           decision?: string | null
           evaluated_at?: string | null
+          evaluated_by_user_id?: string | null
           id?: string
           interview_schedule_options?: string | null
           job_evaluation_link_id: string
@@ -40,6 +42,7 @@ export type Database = {
           created_at?: string
           decision?: string | null
           evaluated_at?: string | null
+          evaluated_by_user_id?: string | null
           id?: string
           interview_schedule_options?: string | null
           job_evaluation_link_id?: string
