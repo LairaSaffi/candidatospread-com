@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, FileText, Briefcase, ExternalLink, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, FileText, Briefcase, ExternalLink, Loader2, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Job {
@@ -203,63 +203,50 @@ export default function EvaluateJob() {
     }
   };
 
+  // Header component for branding
+  const BrandHeader = () => (
+    <header className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg">
+      <div className="container mx-auto max-w-4xl px-4 py-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+            <TrendingUp className="h-8 w-8" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">Hub de Talentos</h1>
+            <p className="text-sm text-primary-foreground/80">Portal de Avaliação de Candidatos</p>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/30">
-        <div className="text-lg text-muted-foreground">Carregando...</div>
+      <div className="min-h-screen bg-gradient-to-b from-muted/50 to-background">
+        <BrandHeader />
+        <div className="flex items-center justify-center py-32">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Carregando candidatos...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/30">
-        <Card className="max-w-md">
-          <CardContent className="pt-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Link inválido</h2>
-            <p className="text-muted-foreground">
-              Este link de avaliação não é válido.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (candidates.length === 0) {
-    return (
-      <div className="min-h-screen bg-muted/30 py-8 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Briefcase className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle className="text-2xl">{job.title}</CardTitle>
-                  {job.client && (
-                    <CardDescription className="mt-1">
-                      Cliente: {job.client}
-                    </CardDescription>
-                  )}
-                </div>
+      <div className="min-h-screen bg-gradient-to-b from-muted/50 to-background">
+        <BrandHeader />
+        <div className="flex items-center justify-center py-32">
+          <Card className="max-w-md shadow-lg border-0">
+            <CardContent className="pt-8 pb-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+                <XCircle className="h-8 w-8 text-destructive" />
               </div>
-            </CardHeader>
-            {job.description && (
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {job.description}
-                </p>
-              </CardContent>
-            )}
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <h2 className="text-lg font-semibold mb-2">Nenhum candidato ainda</h2>
-              <p className="text-sm text-muted-foreground">
-                Ainda não há candidatos para avaliar nesta vaga.
+              <h2 className="text-xl font-semibold mb-2">Link inválido</h2>
+              <p className="text-muted-foreground">
+                Este link de avaliação não é válido ou expirou.
               </p>
             </CardContent>
           </Card>
@@ -268,28 +255,78 @@ export default function EvaluateJob() {
     );
   }
 
+  if (candidates.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-muted/50 to-background">
+        <BrandHeader />
+        <main className="container mx-auto max-w-4xl px-4 py-8">
+          {/* Job Header Card */}
+          <Card className="mb-6 shadow-lg border-0 overflow-hidden">
+            <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-primary rounded-xl shadow-md">
+                  <Briefcase className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-2xl font-bold text-foreground">{job.title}</CardTitle>
+                  {job.client && (
+                    <CardDescription className="mt-1 text-base">
+                      Cliente: <span className="font-medium text-foreground">{job.client}</span>
+                    </CardDescription>
+                  )}
+                </div>
+              </div>
+            </div>
+            {job.description && (
+              <CardContent className="pt-4">
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                  {job.description}
+                </p>
+              </CardContent>
+            )}
+          </Card>
+
+          <Card className="shadow-md border-0">
+            <CardContent className="py-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <FileText className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-lg font-semibold mb-2">Nenhum candidato ainda</h2>
+              <p className="text-sm text-muted-foreground">
+                Ainda não há candidatos para avaliar nesta vaga.
+              </p>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-muted/30 py-8 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Briefcase className="h-6 w-6 text-primary" />
+    <div className="min-h-screen bg-gradient-to-b from-muted/50 to-background">
+      <BrandHeader />
+      
+      <main className="container mx-auto max-w-4xl px-4 py-8">
+        {/* Job Header Card */}
+        <Card className="mb-6 shadow-lg border-0 overflow-hidden">
+          <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-primary rounded-xl shadow-md">
+                <Briefcase className="h-6 w-6 text-primary-foreground" />
               </div>
               <div className="flex-1">
-                <CardTitle className="text-2xl">{job.title}</CardTitle>
+                <CardTitle className="text-2xl font-bold text-foreground">{job.title}</CardTitle>
                 {job.client && (
-                  <CardDescription className="mt-1">
-                    Cliente: {job.client}
+                  <CardDescription className="mt-1 text-base">
+                    Cliente: <span className="font-medium text-foreground">{job.client}</span>
                   </CardDescription>
                 )}
               </div>
             </div>
-          </CardHeader>
+          </div>
           {job.description && (
-            <CardContent>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+            <CardContent className="pt-4">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {job.description}
               </p>
             </CardContent>
@@ -494,7 +531,7 @@ export default function EvaluateJob() {
             );
           })}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
