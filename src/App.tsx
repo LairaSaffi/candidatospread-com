@@ -14,6 +14,7 @@ import EditJob from "./pages/EditJob";
 import JobDetails from "./pages/JobDetails";
 import NewCandidate from "./pages/NewCandidate";
 import CandidateDetails from "./pages/CandidateDetails";
+import EditCandidate from "./pages/EditCandidate";
 import EvaluateJob from "./pages/EvaluateJob";
 import AdminUsers from "./pages/AdminUsers";
 import AdminCandidates from "./pages/AdminCandidates";
@@ -78,6 +79,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <CandidateDetails />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/jobs/:jobId/candidates/:candidateId/edit"
+              element={
+                <AuthGuard>
+                  <EditCandidate />
                 </AuthGuard>
               }
             />

@@ -5,13 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ArrowLeft, FileText, Loader2, ExternalLink, CheckCircle, XCircle, User, Link2 } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, ExternalLink, CheckCircle, XCircle, User, Link2, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { openSignedFile } from "@/lib/storage";
 import { InternalEvaluationDialog } from "@/components/InternalEvaluationDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Candidate {
   id: string;
@@ -46,9 +57,10 @@ export default function CandidateDetails() {
   const [evaluation, setEvaluation] = useState<CandidateEvaluation | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingFile, setOpeningFile] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, canEditJobs } = useAuth();
 
   useEffect(() => {
     if (jobId && candidateId) {
@@ -145,6 +157,33 @@ export default function CandidateDetails() {
     }
   };
 
+  const handleDeleteCandidate = async () => {
+    if (!candidateId) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("candidates")
+        .delete()
+        .eq("id", candidateId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Candidato excluído",
+        description: "O candidato foi removido com sucesso.",
+      });
+      navigate(`/jobs/${jobId}`);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -185,7 +224,50 @@ export default function CandidateDetails() {
                   Candidato para: {job.title}
                 </CardDescription>
               </div>
-              <StatusBadge status={candidate.status} />
+              <div className="flex flex-col items-end gap-2">
+                <StatusBadge status={candidate.status} />
+                {canEditJobs && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/jobs/${jobId}/candidates/${candidateId}/edit`)}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm" disabled={deleting}>
+                          {deleting ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 mr-2" />
+                          )}
+                          Excluir
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir candidato?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. O candidato "{candidate.name}" e todas as suas avaliações serão excluídos permanentemente.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteCandidate}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
