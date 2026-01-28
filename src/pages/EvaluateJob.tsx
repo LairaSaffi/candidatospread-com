@@ -212,7 +212,7 @@ export default function EvaluateJob() {
             <TrendingUp className="h-8 w-8" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Hub de Talentos</h1>
+            <h1 className="text-xl font-bold tracking-tight">Talent on Demand</h1>
             <p className="text-sm text-primary-foreground/80">Portal de Avaliação de Candidatos</p>
           </div>
         </div>
