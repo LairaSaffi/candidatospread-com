@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 27%;
 
-    --primary: 217 91% 60%;
+    --primary: 266 95% 54%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 214 32% 91%;
@@ -34,7 +34,7 @@ All colors MUST be HSL.
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --ring: 266 95% 54%;
 
     --radius: 0.75rem;
     
@@ -44,7 +44,7 @@ All colors MUST be HSL.
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
     
-    --pending: 217 91% 60%;
+    --pending: 266 95% 54%;
     --approved: 142 76% 36%;
     --rejected: 0 84% 60%;
 
@@ -62,7 +62,7 @@ All colors MUST be HSL.
 
     --sidebar-border: 220 13% 91%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 266 95% 54%;
   }
 
   .dark {
@@ -75,7 +75,7 @@ All colors MUST be HSL.
     --popover: 217 33% 17%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 60%;
+    --primary: 266 95% 54%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217 33% 17%;
@@ -92,7 +92,7 @@ All colors MUST be HSL.
 
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    --ring: 266 95% 54%;
     
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
@@ -100,7 +100,7 @@ All colors MUST be HSL.
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
     
-    --pending: 217 91% 60%;
+    --pending: 266 95% 54%;
     --approved: 142 76% 36%;
     --rejected: 0 63% 31%;
     --sidebar-background: 240 5.9% 10%;
@@ -110,7 +110,7 @@ All colors MUST be HSL.
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 266 95% 54%;
   }
 }
 
