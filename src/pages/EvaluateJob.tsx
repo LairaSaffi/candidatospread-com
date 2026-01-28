@@ -206,13 +206,13 @@ export default function EvaluateJob() {
 
   // Header component for branding
   const BrandHeader = () => (
-    <header className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg">
-      <div className="container mx-auto max-w-4xl px-4 py-6">
+    <header className="bg-white border-b shadow-sm">
+      <div className="container mx-auto max-w-4xl px-4 py-4">
         <div className="flex items-center gap-3">
           <img src={logoSpread} alt="Spread Logo" className="h-10 w-auto" />
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Talent on Demand</h1>
-            <p className="text-sm text-primary-foreground/80">Portal de Avaliação de Candidatos</p>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Talent on Demand</h1>
+            <p className="text-sm text-muted-foreground">Portal de Avaliação de Candidatos</p>
           </div>
         </div>
       </div>
@@ -261,20 +261,13 @@ export default function EvaluateJob() {
         <main className="container mx-auto max-w-4xl px-4 py-8">
           {/* Job Header Card */}
           <Card className="mb-6 shadow-lg border-0 overflow-hidden">
-            <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-primary rounded-xl shadow-md">
-                  <Briefcase className="h-6 w-6 text-primary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle className="text-2xl font-bold text-foreground">{job.title}</CardTitle>
-                  {job.client && (
-                    <CardDescription className="mt-1 text-base">
-                      Cliente: <span className="font-medium text-foreground">{job.client}</span>
-                    </CardDescription>
-                  )}
-                </div>
-              </div>
+            <div className="bg-primary p-6">
+              <CardTitle className="text-2xl font-bold text-primary-foreground">{job.title}</CardTitle>
+              {job.client && (
+                <CardDescription className="mt-2 text-primary-foreground/80">
+                  Cliente: <span className="font-medium text-primary-foreground">{job.client}</span>
+                </CardDescription>
+              )}
             </div>
             {job.description && (
               <CardContent className="pt-4">
@@ -308,20 +301,13 @@ export default function EvaluateJob() {
       <main className="container mx-auto max-w-4xl px-4 py-8">
         {/* Job Header Card */}
         <Card className="mb-6 shadow-lg border-0 overflow-hidden">
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-primary rounded-xl shadow-md">
-                <Briefcase className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div className="flex-1">
-                <CardTitle className="text-2xl font-bold text-foreground">{job.title}</CardTitle>
-                {job.client && (
-                  <CardDescription className="mt-1 text-base">
-                    Cliente: <span className="font-medium text-foreground">{job.client}</span>
-                  </CardDescription>
-                )}
-              </div>
-            </div>
+          <div className="bg-primary p-6">
+            <CardTitle className="text-2xl font-bold text-primary-foreground">{job.title}</CardTitle>
+            {job.client && (
+              <CardDescription className="mt-2 text-primary-foreground/80">
+                Cliente: <span className="font-medium text-primary-foreground">{job.client}</span>
+              </CardDescription>
+            )}
           </div>
           {job.description && (
             <CardContent className="pt-4">
