@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Briefcase, Users, LogOut, TrendingUp, Link as LinkIcon, Search, Settings, Filter } from "lucide-react";
+import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter } from "lucide-react";
+import logoSpread from "@/assets/logo-spread.jpg";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -151,7 +152,7 @@ export default function Dashboard() {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-primary" />
+            <img src={logoSpread} alt="Spread Logo" className="h-8 w-auto" />
             <h1 className="text-xl font-bold">Talent on Demand</h1>
           </div>
           <div className="flex items-center gap-4">
