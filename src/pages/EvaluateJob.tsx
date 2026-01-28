@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, FileText, Briefcase, ExternalLink, Loader2, TrendingUp } from "lucide-react";
+import { CheckCircle, XCircle, FileText, Briefcase, ExternalLink, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import logoSpread from "@/assets/logo-spread.jpg";
 
 interface Job {
   id: string;
@@ -208,9 +209,7 @@ export default function EvaluateJob() {
     <header className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg">
       <div className="container mx-auto max-w-4xl px-4 py-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-            <TrendingUp className="h-8 w-8" />
-          </div>
+          <img src={logoSpread} alt="Spread Logo" className="h-10 w-auto" />
           <div>
             <h1 className="text-xl font-bold tracking-tight">Talent on Demand</h1>
             <p className="text-sm text-primary-foreground/80">Portal de Avaliação de Candidatos</p>
