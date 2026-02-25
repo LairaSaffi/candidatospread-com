@@ -39,12 +39,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
     // Validate caller is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -54,22 +48,40 @@ Deno.serve(async (req) => {
       });
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user: callingUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !callingUser) {
-      console.error("Token validation failed:", authError);
+    // Validate user token via direct API call (avoids supabase-js session issues)
+    const userResponse = await fetch(
+      `${Deno.env.get("SUPABASE_URL")!}/auth/v1/user`,
+      {
+        headers: {
+          Authorization: authHeader,
+          apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+        },
+      }
+    );
+
+    if (!userResponse.ok) {
+      console.error("Token validation failed:", userResponse.status);
       return new Response(JSON.stringify({ error: "Sessão inválida. Faça login novamente." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const callingUser = await userResponse.json();
+    const callingUserId = callingUser.id;
+
+    // Admin client for privileged operations
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
     // Check if caller is admin
     const { data: adminCheck } = await supabaseAdmin
       .from("user_roles")
       .select("role")
-      .eq("user_id", callingUser.id)
+      .eq("user_id", callingUserId)
       .eq("role", "admin")
       .maybeSingle();
 
@@ -90,7 +102,7 @@ Deno.serve(async (req) => {
     }
 
     // Prevent admin from disabling themselves
-    if ((action === "disable-user") && user_id === callingUser.id) {
+    if ((action === "disable-user") && user_id === callingUserId) {
       return new Response(JSON.stringify({ error: "Você não pode desativar sua própria conta" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
