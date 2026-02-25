@@ -41,26 +41,27 @@ Deno.serve(async (req) => {
   try {
     // Validate caller is authenticated
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Validate user token via direct API call (avoids supabase-js session issues)
+    // Validate token via direct API call with service role key
     const userResponse = await fetch(
       `${Deno.env.get("SUPABASE_URL")!}/auth/v1/user`,
       {
         headers: {
           Authorization: authHeader,
-          apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+          apikey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
         },
       }
     );
 
     if (!userResponse.ok) {
-      console.error("Token validation failed:", userResponse.status);
+      const errBody = await userResponse.text();
+      console.error("Token validation failed:", userResponse.status, errBody);
       return new Response(JSON.stringify({ error: "Sessão inválida. Faça login novamente." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
