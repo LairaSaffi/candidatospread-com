@@ -1,8 +1,4 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const getAllowedOrigin = (requestOrigin: string | null): string => {
   if (!requestOrigin) return "";
@@ -37,11 +33,10 @@ interface NotifyRequest {
   interview_schedule_options?: string;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
   const corsHeaders = getCorsHeaders(origin);
 
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -50,37 +45,14 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Authenticate the caller
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Não autorizado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
-
-    if (authError || !user) {
-      console.error("Auth failed:", authError?.message);
-      return new Response(JSON.stringify({ error: "Sessão inválida. Faça login novamente." }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Use service role client for privileged operations
+    // Use service role client for all operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { job_id, candidate_id, candidate_name, decision, justification, interview_schedule_options }: NotifyRequest = await req.json();
 
-    console.log(
-      `Notificando avaliação: user=${user.id}, job_id=${job_id}, candidate_id=${candidate_id ?? "(n/a)"}, candidato=${candidate_name}, decisão=${decision}`
-    );
+    console.log(`Notificando avaliação: job_id=${job_id}, candidate_id=${candidate_id ?? "(n/a)"}, candidato=${candidate_name}, decisão=${decision}`);
 
-    // Buscar dados da vaga com os IDs dos responsáveis
+    // Buscar dados da vaga
     const { data: job, error: jobError } = await supabase
       .from("jobs")
       .select("title, client, spread_manager_id, commercial_responsible_id, recruiter_responsible_id")
@@ -104,7 +76,6 @@ serve(async (req) => {
         console.error("Erro ao atualizar status do candidato:", candidateUpdateError);
         throw new Error("Erro ao atualizar status do candidato");
       }
-
       console.log(`Status do candidato atualizado para: ${newStatus}`);
     }
 
@@ -123,84 +94,43 @@ serve(async (req) => {
       );
     }
 
-    // Buscar e-mails dos responsáveis
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("email, full_name")
-      .in("id", uniqueIds);
-
-    if (profilesError) {
-      console.error("Erro ao buscar perfis:", profilesError);
-      throw new Error("Erro ao buscar perfis dos responsáveis");
-    }
-
-    const emails = profiles?.map(p => p.email).filter(Boolean) || [];
-
-    if (emails.length === 0) {
-      return new Response(
-        JSON.stringify({ success: true, message: "Nenhum e-mail para notificar" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    // Criar notificações in-app para cada responsável
     const decisionText = decision === "interested" ? "APROVADO" : "REPROVADO";
-    const decisionColor = decision === "interested" ? "#22c55e" : "#ef4444";
-
-    let detailsHtml = "";
+    
+    let messageDetails = "";
     if (decision === "rejected" && justification) {
-      detailsHtml = `
-        <div style="margin-top: 16px; padding: 12px; background-color: #fef2f2; border-radius: 8px;">
-          <strong>Motivo da reprovação:</strong>
-          <p style="margin: 8px 0 0 0;">${justification}</p>
-        </div>
-      `;
+      messageDetails = `\nMotivo: ${justification}`;
     } else if (decision === "interested" && interview_schedule_options) {
-      detailsHtml = `
-        <div style="margin-top: 16px; padding: 12px; background-color: #f0fdf4; border-radius: 8px;">
-          <strong>Horários sugeridos para entrevista:</strong>
-          <p style="margin: 8px 0 0 0;">${interview_schedule_options}</p>
-        </div>
-      `;
+      messageDetails = `\nHorários sugeridos: ${interview_schedule_options}`;
     }
 
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Avaliação de Candidato</h2>
-        
-        <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 16px 0;">
-          <p style="margin: 0 0 8px 0;"><strong>Vaga:</strong> ${job.title}</p>
-          ${job.client ? `<p style="margin: 0 0 8px 0;"><strong>Cliente:</strong> ${job.client}</p>` : ""}
-          <p style="margin: 0 0 8px 0;"><strong>Candidato:</strong> ${candidate_name}</p>
-          <p style="margin: 0;">
-            <strong>Decisão do Cliente:</strong> 
-            <span style="color: ${decisionColor}; font-weight: bold;">${decisionText}</span>
-          </p>
-        </div>
+    const notifications = uniqueIds.map(userId => ({
+      user_id: userId,
+      title: `Candidato ${decisionText}: ${candidate_name}`,
+      message: `O cliente avaliou o candidato ${candidate_name} para a vaga "${job.title}"${job.client ? ` (${job.client})` : ""} como ${decisionText}.${messageDetails}`,
+      metadata: {
+        job_id,
+        candidate_id: candidate_id || null,
+        decision,
+        candidate_name,
+        job_title: job.title,
+        client: job.client,
+      },
+    }));
 
-        ${detailsHtml}
+    const { error: notifError } = await supabase
+      .from("notifications")
+      .insert(notifications);
 
-        <p style="color: #666; font-size: 14px; margin-top: 24px;">
-          Esta é uma notificação automática do sistema de recrutamento.
-        </p>
-      </div>
-    `;
-
-    for (const email of emails) {
-      try {
-        const response = await resend.emails.send({
-          from: "Recrutamento <onboarding@resend.dev>",
-          to: [email],
-          subject: `[${decisionText}] Candidato ${candidate_name} - ${job.title}`,
-          html: emailHtml,
-        });
-        console.log(`E-mail enviado para ${email}:`, response);
-      } catch (emailError) {
-        console.error(`Erro ao enviar e-mail para ${email}:`, emailError);
-      }
+    if (notifError) {
+      console.error("Erro ao criar notificações:", notifError);
+      throw new Error("Erro ao criar notificações");
     }
+
+    console.log(`Notificações criadas para ${uniqueIds.length} responsáveis`);
 
     return new Response(
-      JSON.stringify({ success: true, notified: emails }),
+      JSON.stringify({ success: true, notified_users: uniqueIds.length }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
