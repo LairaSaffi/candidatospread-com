@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 import logoSpread from "@/assets/logo-spread.jpg";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -176,6 +177,7 @@ export default function Dashboard() {
                 </Button>
               </>
             )}
+            <NotificationBell />
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
               Sair
