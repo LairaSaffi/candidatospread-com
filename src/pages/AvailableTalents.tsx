@@ -31,7 +31,6 @@ interface TalentCandidate {
   technical_test_url: string | null;
   hr_interview_notes: string | null;
   job_id: string;
-  job_title: string;
   tags: Tag[];
 }
 
@@ -60,7 +59,7 @@ export default function AvailableTalents() {
       const [candidatesResult, tagsResult] = await Promise.all([
         supabase
           .from("candidates")
-          .select("id, name, seniority, cv_url, technical_test_url, hr_interview_notes, job_id, internal_status, jobs(title)")
+          .select("id, name, seniority, cv_url, technical_test_url, hr_interview_notes, job_id, internal_status")
           .eq("internal_status", "disponivel")
           .order("name"),
         supabase.from("tags").select("*").order("name"),
@@ -94,7 +93,6 @@ export default function AvailableTalents() {
         technical_test_url: c.technical_test_url,
         hr_interview_notes: c.hr_interview_notes,
         job_id: c.job_id,
-        job_title: c.jobs?.title || "—",
         tags: candidateTagsMap[c.id] || [],
       }));
 
@@ -214,11 +212,12 @@ export default function AvailableTalents() {
             {filtered.map((c) => (
               <Card key={c.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <CardTitle className="text-xl">{c.name}</CardTitle>
-                  <div className="flex items-center gap-2 mt-1">
+                <CardTitle className="text-xl">{c.name}</CardTitle>
+                {c.seniority && (
+                  <div className="mt-1">
                     <Badge variant="secondary">{seniorityLabel(c.seniority)}</Badge>
-                    <span className="text-xs text-muted-foreground">Vaga: {c.job_title}</span>
                   </div>
+                )}
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {c.tags.length > 0 && (
