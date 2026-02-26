@@ -247,10 +247,16 @@ export default function CandidateDetails() {
                 </CardDescription>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <div className="flex gap-2">
-                  <StatusBadge status={candidate.status} />
+                <div className="flex flex-wrap gap-2">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground">Avaliação:</span>
+                    <StatusBadge status={candidate.status} />
+                  </div>
                   {candidate.internal_status && (
-                    <StatusBadge status={candidate.internal_status} />
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground">Interno:</span>
+                      <StatusBadge status={candidate.internal_status} />
+                    </div>
                   )}
                 </div>
                 {canEditJobs && (
