@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -67,6 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+
+        // Redirect to reset-password page on PASSWORD_RECOVERY event
+        if (event === "PASSWORD_RECOVERY") {
+          window.location.href = "/reset-password";
+          return;
+        }
 
         if (session?.user) {
           // Defer data fetch to avoid deadlock

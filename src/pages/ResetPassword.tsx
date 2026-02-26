@@ -25,7 +25,15 @@ export default function ResetPassword() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const [isInvite, setIsInvite] = useState(false);
+
   useEffect(() => {
+    // Check URL hash for recovery type (comes from invite/reset links)
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery")) {
+      setIsInvite(true);
+    }
+
     // Check if we have a valid session from the reset link
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -85,9 +93,13 @@ export default function ResetPassword() {
           <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
             <Lock className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Redefinir Senha</CardTitle>
+          <CardTitle className="text-2xl">
+            {isInvite ? "Bem-vindo! Defina sua senha" : "Redefinir Senha"}
+          </CardTitle>
           <CardDescription>
-            Digite sua nova senha abaixo
+            {isInvite
+              ? "Crie uma senha para acessar a plataforma"
+              : "Digite sua nova senha abaixo"}
           </CardDescription>
         </CardHeader>
         <CardContent>
