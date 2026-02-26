@@ -65,6 +65,42 @@ export type Database = {
           },
         ]
       }
+      candidate_tags: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_tags_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidates: {
         Row: {
           created_at: string
@@ -73,6 +109,7 @@ export type Database = {
           id: string
           job_id: string
           name: string
+          seniority: string | null
           status: string
           technical_test_url: string | null
           updated_at: string
@@ -84,6 +121,7 @@ export type Database = {
           id?: string
           job_id: string
           name: string
+          seniority?: string | null
           status?: string
           technical_test_url?: string | null
           updated_at?: string
@@ -95,6 +133,7 @@ export type Database = {
           id?: string
           job_id?: string
           name?: string
+          seniority?: string | null
           status?: string
           technical_test_url?: string | null
           updated_at?: string
@@ -265,6 +304,24 @@ export type Database = {
           is_active?: boolean
           must_change_password?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }

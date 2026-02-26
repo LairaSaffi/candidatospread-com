@@ -6,96 +6,101 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, Upload, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Loader2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-interface Candidate {
+const SENIORITY_OPTIONS = [
+  { value: "junior", label: "Júnior" },
+  { value: "pleno", label: "Pleno" },
+  { value: "senior", label: "Sênior" },
+  { value: "especialista", label: "Especialista" },
+  { value: "gestao", label: "Gestão" },
+];
+
+const TALENT_STATUS_OPTIONS = [
+  { value: "pending", label: "Pendente" },
+  { value: "under_review", label: "Em Análise" },
+  { value: "approved", label: "Aprovado" },
+  { value: "rejected", label: "Recusado" },
+  { value: "em_contratacao", label: "Em Contratação" },
+  { value: "contratado", label: "Contratado" },
+  { value: "disponivel", label: "Disponível" },
+];
+
+interface Tag {
   id: string;
   name: string;
-  cv_url: string | null;
-  technical_test_url: string | null;
-  hr_interview_notes: string | null;
-  job_id: string;
-}
-
-interface Job {
-  id: string;
-  title: string;
 }
 
 export default function EditCandidate() {
   const { jobId, candidateId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { canEditJobs } = useAuth();
+  const { canEditJobs, isAdmin } = useAuth();
 
-  const [candidate, setCandidate] = useState<Candidate | null>(null);
-  const [job, setJob] = useState<Job | null>(null);
+  const [candidate, setCandidate] = useState<any>(null);
+  const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [name, setName] = useState("");
+  const [seniority, setSeniority] = useState("");
+  const [status, setStatus] = useState("pending");
   const [hrNotes, setHrNotes] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [technicalTestFile, setTechnicalTestFile] = useState<File | null>(null);
   const [removeCv, setRemoveCv] = useState(false);
   const [removeTechnicalTest, setRemoveTechnicalTest] = useState(false);
 
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
   useEffect(() => {
-    if (!canEditJobs) {
-      navigate("/");
-      return;
-    }
-    if (jobId && candidateId) {
-      loadData();
-    }
+    if (!canEditJobs) { navigate("/"); return; }
+    if (jobId && candidateId) loadData();
   }, [jobId, candidateId, canEditJobs]);
 
   const loadData = async () => {
     try {
-      const [candidateResult, jobResult] = await Promise.all([
-        supabase
-          .from("candidates")
-          .select("*")
-          .eq("id", candidateId)
-          .maybeSingle(),
-        supabase
-          .from("jobs")
-          .select("id, title")
-          .eq("id", jobId)
-          .maybeSingle()
+      const [candidateResult, jobResult, tagsResult, candidateTagsResult] = await Promise.all([
+        supabase.from("candidates").select("*").eq("id", candidateId).maybeSingle(),
+        supabase.from("jobs").select("id, title").eq("id", jobId).maybeSingle(),
+        supabase.from("tags").select("*").order("name"),
+        supabase.from("candidate_tags").select("tag_id").eq("candidate_id", candidateId!),
       ]);
 
       if (candidateResult.error) throw candidateResult.error;
       if (jobResult.error) throw jobResult.error;
 
       if (candidateResult.data) {
-        setCandidate(candidateResult.data as Candidate);
+        setCandidate(candidateResult.data);
         setName(candidateResult.data.name);
+        setSeniority(candidateResult.data.seniority || "");
+        setStatus(candidateResult.data.status || "pending");
         setHrNotes(candidateResult.data.hr_interview_notes || "");
       }
       setJob(jobResult.data);
+      if (tagsResult.data) setTags(tagsResult.data);
+      if (candidateTagsResult.data) setSelectedTags(candidateTagsResult.data.map((ct: any) => ct.tag_id));
     } catch (error: any) {
-      toast({
-        title: "Erro ao carregar dados",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Erro ao carregar dados", description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
+  const toggleTag = (tagId: string) => {
+    setSelectedTags((prev) => prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]);
+  };
+
   const uploadFile = async (file: File, bucket: string): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     const filePath = `${jobId}/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file);
-
+    const { error } = await supabase.storage.from(bucket).upload(filePath, file);
     if (error) throw error;
     return filePath;
   };
@@ -108,44 +113,37 @@ export default function EditCandidate() {
     try {
       const updates: Record<string, unknown> = {
         name: name.trim(),
+        seniority: seniority || null,
+        status,
         hr_interview_notes: hrNotes.trim() || null,
       };
 
-      // Upload novo CV se houver
       if (cvFile) {
-        const cvPath = await uploadFile(cvFile, "cvs");
-        updates.cv_url = cvPath;
+        updates.cv_url = await uploadFile(cvFile, "cvs");
       } else if (removeCv) {
         updates.cv_url = null;
       }
 
-      // Upload novo teste técnico se houver
       if (technicalTestFile) {
-        const testPath = await uploadFile(technicalTestFile, "technical-tests");
-        updates.technical_test_url = testPath;
+        updates.technical_test_url = await uploadFile(technicalTestFile, "technical-tests");
       } else if (removeTechnicalTest) {
         updates.technical_test_url = null;
       }
 
-      const { error } = await supabase
-        .from("candidates")
-        .update(updates)
-        .eq("id", candidateId);
-
+      const { error } = await supabase.from("candidates").update(updates).eq("id", candidateId);
       if (error) throw error;
 
-      toast({
-        title: "Candidato atualizado!",
-        description: "As informações foram salvas com sucesso.",
-      });
+      // Update tags: delete old, insert new
+      await supabase.from("candidate_tags").delete().eq("candidate_id", candidateId!);
+      if (selectedTags.length > 0) {
+        const tagInserts = selectedTags.map((tagId) => ({ candidate_id: candidateId!, tag_id: tagId }));
+        await supabase.from("candidate_tags").insert(tagInserts);
+      }
 
+      toast({ title: "Candidato atualizado!", description: "As informações foram salvas com sucesso." });
       navigate(`/jobs/${jobId}/candidates/${candidateId}`);
     } catch (error: any) {
-      toast({
-        title: "Erro ao salvar",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -163,9 +161,7 @@ export default function EditCandidate() {
     return (
       <div className="flex min-h-screen items-center justify-center flex-col gap-4">
         <div className="text-lg text-muted-foreground">Candidato não encontrado</div>
-        <Button variant="outline" onClick={() => navigate("/")}>
-          Voltar ao Dashboard
-        </Button>
+        <Button variant="outline" onClick={() => navigate("/")}>Voltar ao Dashboard</Button>
       </div>
     );
   }
@@ -185,22 +181,62 @@ export default function EditCandidate() {
         <Card>
           <CardHeader>
             <CardTitle>Editar Candidato</CardTitle>
-            <CardDescription>
-              Atualize as informações de {candidate.name} para a vaga {job.title}
-            </CardDescription>
+            <CardDescription>Atualize as informações de {candidate.name} para a vaga {job.title}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Nome */}
               <div className="space-y-2">
                 <Label htmlFor="name">Nome do Candidato *</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Nome completo"
-                  required
-                />
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="seniority">Senioridade</Label>
+                <Select value={seniority} onValueChange={setSeniority}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a senioridade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SENIORITY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status do Candidato</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TALENT_STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tags de Conhecimento</Label>
+                <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[42px]">
+                  {tags.length === 0 ? (
+                    <span className="text-sm text-muted-foreground">Nenhuma tag cadastrada</span>
+                  ) : (
+                    tags.map((tag) => (
+                      <Badge
+                        key={tag.id}
+                        variant={selectedTags.includes(tag.id) ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => toggleTag(tag.id)}
+                      >
+                        #{tag.name}
+                        {selectedTags.includes(tag.id) && <X className="h-3 w-3 ml-1" />}
+                      </Badge>
+                    ))
+                  )}
+                </div>
               </div>
 
               {/* CV */}
@@ -209,38 +245,15 @@ export default function EditCandidate() {
                 {candidate.cv_url && !removeCv && !cvFile && (
                   <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
                     <span className="text-sm flex-1 truncate">CV atual anexado</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setRemoveCv(true)}
-                    >
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setRemoveCv(true)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
                 {(removeCv || !candidate.cv_url || cvFile) && (
                   <div className="flex items-center gap-2">
-                    <Input
-                      id="cv"
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={(e) => {
-                        setCvFile(e.target.files?.[0] || null);
-                        setRemoveCv(false);
-                      }}
-                      className="flex-1"
-                    />
-                    {cvFile && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setCvFile(null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Input id="cv" type="file" accept=".pdf,.doc,.docx" onChange={(e) => { setCvFile(e.target.files?.[0] || null); setRemoveCv(false); }} className="flex-1" />
+                    {cvFile && <Button type="button" variant="ghost" size="sm" onClick={() => setCvFile(null)}><X className="h-4 w-4" /></Button>}
                   </div>
                 )}
               </div>
@@ -251,38 +264,15 @@ export default function EditCandidate() {
                 {candidate.technical_test_url && !removeTechnicalTest && !technicalTestFile && (
                   <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
                     <span className="text-sm flex-1 truncate">Teste técnico atual anexado</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setRemoveTechnicalTest(true)}
-                    >
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setRemoveTechnicalTest(true)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
                 {(removeTechnicalTest || !candidate.technical_test_url || technicalTestFile) && (
                   <div className="flex items-center gap-2">
-                    <Input
-                      id="technical-test"
-                      type="file"
-                      accept=".pdf,.doc,.docx,.zip,.rar"
-                      onChange={(e) => {
-                        setTechnicalTestFile(e.target.files?.[0] || null);
-                        setRemoveTechnicalTest(false);
-                      }}
-                      className="flex-1"
-                    />
-                    {technicalTestFile && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setTechnicalTestFile(null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Input id="technical-test" type="file" accept=".pdf,.doc,.docx,.zip,.rar" onChange={(e) => { setTechnicalTestFile(e.target.files?.[0] || null); setRemoveTechnicalTest(false); }} className="flex-1" />
+                    {technicalTestFile && <Button type="button" variant="ghost" size="sm" onClick={() => setTechnicalTestFile(null)}><X className="h-4 w-4" /></Button>}
                   </div>
                 )}
               </div>
@@ -290,25 +280,11 @@ export default function EditCandidate() {
               {/* Parecer RH */}
               <div className="space-y-2">
                 <Label htmlFor="hr-notes">Parecer do RH</Label>
-                <Textarea
-                  id="hr-notes"
-                  value={hrNotes}
-                  onChange={(e) => setHrNotes(e.target.value)}
-                  placeholder="Observações da entrevista com RH..."
-                  rows={5}
-                />
+                <Textarea id="hr-notes" value={hrNotes} onChange={(e) => setHrNotes(e.target.value)} placeholder="Observações da entrevista com RH..." rows={5} />
               </div>
 
-              {/* Botões */}
               <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate(`/jobs/${jobId}/candidates/${candidateId}`)}
-                  disabled={saving}
-                >
-                  Cancelar
-                </Button>
+                <Button type="button" variant="outline" onClick={() => navigate(`/jobs/${jobId}/candidates/${candidateId}`)} disabled={saving}>Cancelar</Button>
                 <Button type="submit" disabled={saving || !name.trim()}>
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Salvar Alterações
