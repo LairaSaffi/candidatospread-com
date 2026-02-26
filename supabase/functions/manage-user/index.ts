@@ -210,14 +210,14 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Generate a magic link for the user
+        // Generate a recovery link so the invited user can set their own password
         const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-          type: "magiclink",
+          type: "recovery",
           email: email,
         });
 
         if (error) {
-          console.error("Error generating magic link:", error);
+          console.error("Error generating invite recovery link:", error);
           return new Response(JSON.stringify({ error: "Não foi possível gerar o link de convite" }), {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -226,10 +226,10 @@ Deno.serve(async (req) => {
 
         result = { 
           success: true, 
-          message: "Link de convite gerado",
+          message: "Link de convite gerado (o usuário definirá sua própria senha)",
           inviteLink: data.properties?.action_link
         };
-        console.log("Invite link generated for user:", user_id);
+        console.log("Invite recovery link generated for user:", user_id);
         break;
       }
 
