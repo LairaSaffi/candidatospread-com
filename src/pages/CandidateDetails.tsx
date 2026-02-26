@@ -229,9 +229,9 @@ export default function CandidateDetails() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/jobs/${jobId}`)}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para {job.title}
+            Voltar
           </Button>
         </div>
       </header>
