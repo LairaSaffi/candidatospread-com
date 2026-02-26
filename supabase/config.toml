@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.manage-user]
 verify_jwt = false
+
+[functions.reset-all-passwords]
+verify_jwt = false
+
+[functions.clear-password-flag]
+verify_jwt = false
