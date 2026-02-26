@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Briefcase, Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
+import logoSpread from "@/assets/logo-spread.jpg";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -113,8 +114,8 @@ export default function Login() {
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-              <Briefcase className="h-8 w-8 text-primary" />
+            <div className="mx-auto mb-4">
+              <img src={logoSpread} alt="Spread" className="h-12 w-12 rounded-full object-cover" />
             </div>
             <CardTitle className="text-2xl">Recuperar Senha</CardTitle>
             <CardDescription>
@@ -191,10 +192,10 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-            <Briefcase className="h-8 w-8 text-primary" />
-          </div>
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4">
+              <img src={logoSpread} alt="Spread" className="h-12 w-12 rounded-full object-cover" />
+            </div>
           <CardTitle className="text-2xl">Candidatos Talent On Demand</CardTitle>
           <CardDescription>
             Entre com suas credenciais para acessar o painel
