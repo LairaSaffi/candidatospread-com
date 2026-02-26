@@ -20,18 +20,13 @@ const SENIORITY_OPTIONS = [
   { value: "gestao", label: "Gestão" },
 ];
 
-const EVALUATION_STATUS_OPTIONS = [
-  { value: "pending", label: "Pendente" },
-  { value: "approved", label: "Aprovado" },
-  { value: "rejected", label: "Reprovado" },
-];
-
 const INTERNAL_STATUS_OPTIONS = [
   { value: "em_contratacao", label: "Em Contratação" },
   { value: "contratado", label: "Contratado" },
   { value: "disponivel", label: "Disponível" },
   { value: "reprovado_interno", label: "Reprovado" },
 ];
+
 
 interface Tag {
   id: string;
@@ -51,7 +46,6 @@ export default function EditCandidate() {
 
   const [name, setName] = useState("");
   const [seniority, setSeniority] = useState("");
-  const [status, setStatus] = useState("pending");
   const [internalStatus, setInternalStatus] = useState("");
   const [hrNotes, setHrNotes] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -83,7 +77,6 @@ export default function EditCandidate() {
         setCandidate(candidateResult.data);
         setName(candidateResult.data.name);
         setSeniority(candidateResult.data.seniority || "");
-        setStatus(candidateResult.data.status || "pending");
         setInternalStatus((candidateResult.data as any).internal_status || "");
         setHrNotes(candidateResult.data.hr_interview_notes || "");
       }
@@ -119,7 +112,6 @@ export default function EditCandidate() {
       const updates: Record<string, unknown> = {
         name: name.trim(),
         seniority: seniority || null,
-        status,
         internal_status: internalStatus || null,
         hr_interview_notes: hrNotes.trim() || null,
       };
@@ -210,33 +202,21 @@ export default function EditCandidate() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="status">Status Avaliação</Label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EVALUATION_STATUS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="internal-status">Status Interno</Label>
-                <Select value={internalStatus} onValueChange={setInternalStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o status interno" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INTERNAL_STATUS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {isAdmin && (
+                <div className="space-y-2">
+                  <Label htmlFor="internal-status">Status Interno</Label>
+                  <Select value={internalStatus} onValueChange={setInternalStatus}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status interno" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INTERNAL_STATUS_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Tags de Conhecimento</Label>
