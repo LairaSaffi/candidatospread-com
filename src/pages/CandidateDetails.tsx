@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ArrowLeft, FileText, Loader2, ExternalLink, CheckCircle, XCircle, User, Link2, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, ExternalLink, CheckCircle, XCircle, User, Link2, Pencil, Trash2, Share2, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { openSignedFile } from "@/lib/storage";
 import { InternalEvaluationDialog } from "@/components/InternalEvaluationDialog";
@@ -70,6 +70,9 @@ export default function CandidateDetails() {
   const [loading, setLoading] = useState(true);
   const [openingFile, setOpeningFile] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, canEditJobs } = useAuth();
@@ -206,6 +209,44 @@ export default function CandidateDetails() {
     }
   };
 
+  const handleGenerateShareLink = async () => {
+    if (!candidateId) return;
+    setGeneratingLink(true);
+    try {
+      // Check if link already exists
+      const { data: existing } = await supabase
+        .from("candidate_share_links" as any)
+        .select("share_token")
+        .eq("candidate_id", candidateId)
+        .limit(1)
+        .maybeSingle();
+
+      let token: string;
+      if ((existing as any)?.share_token) {
+        token = (existing as any).share_token;
+      } else {
+        const { data: newLink, error } = await supabase
+          .from("candidate_share_links" as any)
+          .insert({ candidate_id: candidateId, created_by: user?.id } as any)
+          .select("share_token")
+          .single();
+        if (error) throw error;
+        token = (newLink as any).share_token;
+      }
+
+      const url = `${window.location.origin}/candidate/${token}`;
+      setShareLink(url);
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+      toast({ title: "Link copiado!", description: "O link do candidato foi copiado para a área de transferência." });
+    } catch (error: any) {
+      toast({ title: "Erro ao gerar link", description: error.message, variant: "destructive" });
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -250,7 +291,22 @@ export default function CandidateDetails() {
                   )}
                 </div>
                 {canEditJobs && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateShareLink}
+                      disabled={generatingLink}
+                    >
+                      {generatingLink ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : copied ? (
+                        <Check className="h-4 w-4 mr-2" />
+                      ) : (
+                        <Share2 className="h-4 w-4 mr-2" />
+                      )}
+                      {copied ? "Link Copiado!" : "Gerar Link"}
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

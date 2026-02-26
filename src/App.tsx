@@ -20,6 +20,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminCandidates from "./pages/AdminCandidates";
 import AdminTags from "./pages/AdminTags";
 import AvailableTalents from "./pages/AvailableTalents";
+import ViewCandidate from "./pages/ViewCandidate";
 import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/bootstrap" element={<Bootstrap />} />
             <Route path="/evaluate/:token" element={<EvaluateJob />} />
+            <Route path="/candidate/:token" element={<ViewCandidate />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route
               path="/"

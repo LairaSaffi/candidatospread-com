@@ -65,6 +65,38 @@ export type Database = {
           },
         ]
       }
+      candidate_share_links: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          share_token: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          share_token?: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          share_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_share_links_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_tags: {
         Row: {
           candidate_id: string
@@ -355,6 +387,7 @@ export type Database = {
     }
     Functions: {
       can_view_evaluation: { Args: { p_link_id: string }; Returns: boolean }
+      get_candidate_by_share_token: { Args: { p_token: string }; Returns: Json }
       get_evaluation_data_by_token: { Args: { p_token: string }; Returns: Json }
       get_evaluation_link_by_token: {
         Args: { p_token: string }
