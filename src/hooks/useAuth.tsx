@@ -8,6 +8,7 @@ interface Profile {
   id: string;
   full_name: string;
   email: string;
+  must_change_password: boolean;
 }
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isGestao: boolean;
   isComercial: boolean;
+  mustChangePassword: boolean;
   canCreateJobs: boolean;
   canEditJobs: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -39,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Buscar perfil
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, full_name, email")
+        .select("id, full_name, email, must_change_password")
         .eq("id", userId)
         .maybeSingle();
 
@@ -125,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = roles.includes("admin");
   const isGestao = roles.includes("gestao_operacao");
   const isComercial = roles.includes("comercial");
+  const mustChangePassword = profile?.must_change_password ?? false;
 
   const canCreateJobs = isAdmin || isGestao;
   const canEditJobs = isAdmin || isGestao;
@@ -140,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         isGestao,
         isComercial,
+        mustChangePassword,
         canCreateJobs,
         canEditJobs,
         signIn,

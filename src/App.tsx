@@ -18,6 +18,7 @@ import EditCandidate from "./pages/EditCandidate";
 import EvaluateJob from "./pages/EvaluateJob";
 import AdminUsers from "./pages/AdminUsers";
 import AdminCandidates from "./pages/AdminCandidates";
+import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/bootstrap" element={<Bootstrap />} />
             <Route path="/evaluate/:token" element={<EvaluateJob />} />
+            <Route path="/change-password" element={<ChangePassword />} />
             <Route
               path="/"
               element={

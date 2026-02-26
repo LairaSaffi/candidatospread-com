@@ -9,13 +9,15 @@ interface AuthGuardProps {
 
 export const AuthGuard = ({ children }: AuthGuardProps) => {
   const navigate = useNavigate();
-  const { user, loading, roles } = useAuth();
+  const { user, loading, roles, mustChangePassword } = useAuth();
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
+    } else if (!loading && user && mustChangePassword) {
+      navigate("/change-password");
     }
-  }, [loading, user, navigate]);
+  }, [loading, user, mustChangePassword, navigate]);
 
   if (loading) {
     return (
