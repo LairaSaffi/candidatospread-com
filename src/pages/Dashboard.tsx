@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter } from "lucide-react";
+import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter, Tag, Star } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import logoSpread from "@/assets/logo-spread.jpg";
 import { useToast } from "@/hooks/use-toast";
@@ -171,12 +171,20 @@ export default function Dashboard() {
                   <Users className="h-4 w-4 mr-2" />
                   Candidatos
                 </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin/tags")}>
+                  <Tag className="h-4 w-4 mr-2" />
+                  Tags
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => navigate("/admin/users")}>
                   <Settings className="h-4 w-4 mr-2" />
                   Usuários
                 </Button>
               </>
             )}
+            <Button variant="outline" size="sm" onClick={() => navigate("/talents")}>
+              <Star className="h-4 w-4 mr-2" />
+              Talentos
+            </Button>
             <NotificationBell />
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />

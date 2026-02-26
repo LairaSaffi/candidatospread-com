@@ -24,13 +24,19 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+interface CandidateTag {
+  id: string;
+  name: string;
+}
+
 interface Candidate {
   id: string;
   name: string;
   cv_url: string | null;
   technical_test_url: string | null;
   hr_interview_notes: string | null;
-  status: "pending" | "under_review" | "approved" | "rejected";
+  seniority: string | null;
+  status: "pending" | "under_review" | "approved" | "rejected" | "em_contratacao" | "contratado" | "disponivel";
   created_at: string;
   job_id: string;
 }
@@ -50,11 +56,16 @@ interface CandidateEvaluation {
   evaluator_name?: string | null;
 }
 
+const SENIORITY_LABELS: Record<string, string> = {
+  junior: "Júnior", pleno: "Pleno", senior: "Sênior", especialista: "Especialista", gestao: "Gestão",
+};
+
 export default function CandidateDetails() {
   const { jobId, candidateId } = useParams();
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [evaluation, setEvaluation] = useState<CandidateEvaluation | null>(null);
+  const [candidateTags, setCandidateTags] = useState<CandidateTag[]>([]);
   const [loading, setLoading] = useState(true);
   const [openingFile, setOpeningFile] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -88,6 +99,15 @@ export default function CandidateDetails() {
 
       setCandidate(candidateResult.data as Candidate);
       setJob(jobResult.data);
+
+      // Load candidate tags
+      const { data: ctData } = await supabase
+        .from("candidate_tags")
+        .select("tag_id, tags(id, name)")
+        .eq("candidate_id", candidateId!);
+      if (ctData) {
+        setCandidateTags(ctData.map((ct: any) => ct.tags).filter(Boolean));
+      }
 
       // Buscar avaliação do candidato
       if (candidateResult.data) {
@@ -271,8 +291,14 @@ export default function CandidateDetails() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-muted-foreground">
-              Cadastrado em: {new Date(candidate.created_at).toLocaleDateString("pt-BR")}
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>Cadastrado em: {new Date(candidate.created_at).toLocaleDateString("pt-BR")}</span>
+              {candidate.seniority && (
+                <Badge variant="secondary">{SENIORITY_LABELS[candidate.seniority] || candidate.seniority}</Badge>
+              )}
+              {candidateTags.map((tag) => (
+                <Badge key={tag.id} variant="outline">#{tag.name}</Badge>
+              ))}
             </div>
           </CardContent>
         </Card>

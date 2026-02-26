@@ -18,6 +18,8 @@ import EditCandidate from "./pages/EditCandidate";
 import EvaluateJob from "./pages/EvaluateJob";
 import AdminUsers from "./pages/AdminUsers";
 import AdminCandidates from "./pages/AdminCandidates";
+import AdminTags from "./pages/AdminTags";
+import AvailableTalents from "./pages/AvailableTalents";
 import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 
@@ -105,6 +107,22 @@ const App = () => (
               element={
                 <AuthGuard>
                   <AdminCandidates />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/admin/tags"
+              element={
+                <AuthGuard>
+                  <AdminTags />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/talents"
+              element={
+                <AuthGuard>
+                  <AvailableTalents />
                 </AuthGuard>
               }
             />
