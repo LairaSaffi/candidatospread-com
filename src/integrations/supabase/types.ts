@@ -107,6 +107,7 @@ export type Database = {
           cv_url: string | null
           hr_interview_notes: string | null
           id: string
+          internal_status: string | null
           job_id: string
           name: string
           seniority: string | null
@@ -119,6 +120,7 @@ export type Database = {
           cv_url?: string | null
           hr_interview_notes?: string | null
           id?: string
+          internal_status?: string | null
           job_id: string
           name: string
           seniority?: string | null
@@ -131,6 +133,7 @@ export type Database = {
           cv_url?: string | null
           hr_interview_notes?: string | null
           id?: string
+          internal_status?: string | null
           job_id?: string
           name?: string
           seniority?: string | null

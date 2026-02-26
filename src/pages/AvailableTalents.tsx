@@ -60,8 +60,8 @@ export default function AvailableTalents() {
       const [candidatesResult, tagsResult] = await Promise.all([
         supabase
           .from("candidates")
-          .select("id, name, seniority, cv_url, technical_test_url, hr_interview_notes, job_id, jobs(title)")
-          .eq("status", "disponivel")
+          .select("id, name, seniority, cv_url, technical_test_url, hr_interview_notes, job_id, internal_status, jobs(title)")
+          .eq("internal_status", "disponivel")
           .order("name"),
         supabase.from("tags").select("*").order("name"),
       ]);
