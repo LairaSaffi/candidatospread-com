@@ -91,14 +91,14 @@ export default function ResetPassword() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-            <Lock className="h-8 w-8 text-primary" />
+            {isInvite ? <Briefcase className="h-8 w-8 text-primary" /> : <Lock className="h-8 w-8 text-primary" />}
           </div>
           <CardTitle className="text-2xl">
-            {isInvite ? "Bem-vindo! Defina sua senha" : "Redefinir Senha"}
+            {isInvite ? "Bem-vindo(a)!" : "Redefinir Senha"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-left">
             {isInvite
-              ? "Crie uma senha para acessar a plataforma"
+              ? "Defina sua senha para acessar a plataforma. Aqui poderemos monitorar os candidatos Spread para as oportunidades de alocação captadas. Um espaço que busca trazer eficiência e organização nas vagas de alocação permitindo que juntos tenhamos um trabalho organizado e focado na melhor entrega aos nossos clientes."
               : "Digite sua nova senha abaixo"}
           </CardDescription>
         </CardHeader>
