@@ -4,10 +4,27 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  if (!requestOrigin) return "";
+  
+  const allowedPatterns = [
+    /^https:\/\/.*\.lovable\.app$/,
+    /^https:\/\/.*\.lovableproject\.com$/,
+    /^http:\/\/localhost(:\d+)?$/,
+  ];
+  
+  if (allowedPatterns.some(pattern => pattern.test(requestOrigin))) {
+    return requestOrigin;
+  }
+  
+  return "";
 };
+
+const getCorsHeaders = (requestOrigin: string | null) => ({
+  "Access-Control-Allow-Origin": getAllowedOrigin(requestOrigin),
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Credentials": "true",
+});
 
 interface NotifyRequest {
   job_id: string;
@@ -19,6 +36,9 @@ interface NotifyRequest {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,15 +47,38 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Authenticate the caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error("Auth failed:", authError?.message);
+      return new Response(JSON.stringify({ error: "Sessão inválida. Faça login novamente." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Use service role client for privileged operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { job_id, candidate_id, candidate_name, decision, justification, interview_schedule_options }: NotifyRequest = await req.json();
 
     console.log(
-      `Notificando avaliação: job_id=${job_id}, candidate_id=${candidate_id ?? "(n/a)"}, candidato=${candidate_name}, decisão=${decision}`
+      `Notificando avaliação: user=${user.id}, job_id=${job_id}, candidate_id=${candidate_id ?? "(n/a)"}, candidato=${candidate_name}, decisão=${decision}`
     );
 
-    // Buscar dados da vaga com os IDs dos responsáveis (não inclui responsible_manager que é do cliente)
+    // Buscar dados da vaga com os IDs dos responsáveis
     const { data: job, error: jobError } = await supabase
       .from("jobs")
       .select("title, client, spread_manager_id, commercial_responsible_id, recruiter_responsible_id")
@@ -47,9 +90,7 @@ serve(async (req) => {
       throw new Error("Vaga não encontrada");
     }
 
-    console.log("Dados da vaga:", job);
-
-    // Atualizar status do candidato (via service role) para refletir a decisão
+    // Atualizar status do candidato
     const newStatus = decision === "interested" ? "approved" : "rejected";
     if (candidate_id) {
       const { error: candidateUpdateError } = await supabase
@@ -63,28 +104,24 @@ serve(async (req) => {
       }
 
       console.log(`Status do candidato atualizado para: ${newStatus}`);
-    } else {
-      console.log("candidate_id não informado; status do candidato não foi atualizado");
     }
 
-    // Coletar IDs dos responsáveis internos (spread, comercial e recrutador)
+    // Coletar IDs dos responsáveis internos
     const responsibleIds: string[] = [];
     if (job.spread_manager_id) responsibleIds.push(job.spread_manager_id);
     if (job.commercial_responsible_id) responsibleIds.push(job.commercial_responsible_id);
     if (job.recruiter_responsible_id) responsibleIds.push(job.recruiter_responsible_id);
 
-    // Remover duplicatas
     const uniqueIds = [...new Set(responsibleIds)];
 
     if (uniqueIds.length === 0) {
-      console.log("Nenhum responsável atribuído para notificar");
       return new Response(
         JSON.stringify({ success: true, message: "Nenhum responsável para notificar" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Buscar e-mails dos responsáveis na tabela profiles
+    // Buscar e-mails dos responsáveis
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("email, full_name")
@@ -98,14 +135,11 @@ serve(async (req) => {
     const emails = profiles?.map(p => p.email).filter(Boolean) || [];
 
     if (emails.length === 0) {
-      console.log("Nenhum e-mail encontrado para os responsáveis");
       return new Response(
         JSON.stringify({ success: true, message: "Nenhum e-mail para notificar" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log("E-mails para notificar:", emails);
 
     const decisionText = decision === "interested" ? "APROVADO" : "REPROVADO";
     const decisionColor = decision === "interested" ? "#22c55e" : "#ef4444";
@@ -149,7 +183,6 @@ serve(async (req) => {
       </div>
     `;
 
-    // Enviar e-mail para cada destinatário
     for (const email of emails) {
       try {
         const response = await resend.emails.send({
