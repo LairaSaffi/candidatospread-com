@@ -20,14 +20,17 @@ const SENIORITY_OPTIONS = [
   { value: "gestao", label: "Gestão" },
 ];
 
-const TALENT_STATUS_OPTIONS = [
+const EVALUATION_STATUS_OPTIONS = [
   { value: "pending", label: "Pendente" },
-  { value: "under_review", label: "Em Análise" },
   { value: "approved", label: "Aprovado" },
-  { value: "rejected", label: "Recusado" },
+  { value: "rejected", label: "Reprovado" },
+];
+
+const INTERNAL_STATUS_OPTIONS = [
   { value: "em_contratacao", label: "Em Contratação" },
   { value: "contratado", label: "Contratado" },
   { value: "disponivel", label: "Disponível" },
+  { value: "reprovado_interno", label: "Reprovado" },
 ];
 
 interface Tag {
@@ -49,6 +52,7 @@ export default function EditCandidate() {
   const [name, setName] = useState("");
   const [seniority, setSeniority] = useState("");
   const [status, setStatus] = useState("pending");
+  const [internalStatus, setInternalStatus] = useState("");
   const [hrNotes, setHrNotes] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [technicalTestFile, setTechnicalTestFile] = useState<File | null>(null);
@@ -80,6 +84,7 @@ export default function EditCandidate() {
         setName(candidateResult.data.name);
         setSeniority(candidateResult.data.seniority || "");
         setStatus(candidateResult.data.status || "pending");
+        setInternalStatus((candidateResult.data as any).internal_status || "");
         setHrNotes(candidateResult.data.hr_interview_notes || "");
       }
       setJob(jobResult.data);
@@ -115,6 +120,7 @@ export default function EditCandidate() {
         name: name.trim(),
         seniority: seniority || null,
         status,
+        internal_status: internalStatus || null,
         hr_interview_notes: hrNotes.trim() || null,
       };
 
@@ -205,13 +211,27 @@ export default function EditCandidate() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="status">Status do Candidato</Label>
+                <Label htmlFor="status">Status Avaliação</Label>
                 <Select value={status} onValueChange={setStatus}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
                   <SelectContent>
-                    {TALENT_STATUS_OPTIONS.map((opt) => (
+                    {EVALUATION_STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="internal-status">Status Interno</Label>
+                <Select value={internalStatus} onValueChange={setInternalStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o status interno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INTERNAL_STATUS_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                     ))}
                   </SelectContent>

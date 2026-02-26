@@ -36,7 +36,8 @@ interface Candidate {
   technical_test_url: string | null;
   hr_interview_notes: string | null;
   seniority: string | null;
-  status: "pending" | "under_review" | "approved" | "rejected" | "em_contratacao" | "contratado" | "disponivel";
+  status: string;
+  internal_status: string | null;
   created_at: string;
   job_id: string;
 }
@@ -97,7 +98,8 @@ export default function CandidateDetails() {
       if (candidateResult.error) throw candidateResult.error;
       if (jobResult.error) throw jobResult.error;
 
-      setCandidate(candidateResult.data as Candidate);
+      const candidateData = candidateResult.data as any;
+      setCandidate({ ...candidateData, internal_status: candidateData.internal_status || null } as Candidate);
       setJob(jobResult.data);
 
       // Load candidate tags
@@ -245,7 +247,12 @@ export default function CandidateDetails() {
                 </CardDescription>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <StatusBadge status={candidate.status} />
+                <div className="flex gap-2">
+                  <StatusBadge status={candidate.status} />
+                  {candidate.internal_status && (
+                    <StatusBadge status={candidate.internal_status} />
+                  )}
+                </div>
                 {canEditJobs && (
                   <div className="flex gap-2">
                     <Button
