@@ -298,7 +298,6 @@ export default function CandidateDetails() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <span>Cadastrado em: {new Date(candidate.created_at).toLocaleDateString("pt-BR")}</span>
               {candidate.seniority && (
                 <Badge variant="secondary">{SENIORITY_LABELS[candidate.seniority] || candidate.seniority}</Badge>
               )}
