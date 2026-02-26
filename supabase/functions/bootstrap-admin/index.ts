@@ -7,6 +7,8 @@ const getAllowedOrigin = (requestOrigin: string | null): string => {
     /^https:\/\/.*\.lovable\.app$/,
     /^https:\/\/.*\.lovableproject\.com$/,
     /^http:\/\/localhost(:\d+)?$/,
+    /^https:\/\/candidatospread\.com$/,
+    /^https:\/\/www\.candidatospread\.com$/,
   ];
   
   if (allowedPatterns.some(pattern => pattern.test(requestOrigin))) {
