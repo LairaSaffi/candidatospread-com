@@ -128,7 +128,7 @@ export default function EditCandidate() {
         updates.technical_test_url = null;
       }
 
-      const { error } = await supabase.from("candidates").update(updates).eq("id", candidateId);
+      const { error } = await supabase.from("candidates").update(updates as any).eq("id", candidateId);
       if (error) throw error;
 
       // Update tags: delete old, insert new
