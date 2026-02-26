@@ -62,20 +62,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Setup auth listener first
+    // Check URL hash for recovery redirect BEFORE anything else
+    // When Supabase redirects after a recovery link, the hash contains type=recovery
+    const hash = window.location.hash;
+    if (hash && hash.includes("type=recovery")) {
+      // Let Supabase process the token first, then redirect
+      supabase.auth.getSession().then(() => {
+        window.location.replace("/reset-password");
+      });
+      return;
+    }
+
+    // Setup auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
-        // Redirect to reset-password page on PASSWORD_RECOVERY event
+        // Also handle PASSWORD_RECOVERY event as fallback
         if (event === "PASSWORD_RECOVERY") {
-          window.location.href = "/reset-password";
+          window.location.replace("/reset-password");
           return;
         }
 
         if (session?.user) {
-          // Defer data fetch to avoid deadlock
           setTimeout(() => {
             fetchUserData(session.user.id);
           }, 0);
