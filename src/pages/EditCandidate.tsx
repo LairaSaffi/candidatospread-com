@@ -139,7 +139,7 @@ export default function EditCandidate() {
       }
 
       toast({ title: "Candidato atualizado!", description: "As informações foram salvas com sucesso." });
-      navigate(`/jobs/${jobId}/candidates/${candidateId}`);
+      navigate(-1);
     } catch (error: any) {
       toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
     } finally {
@@ -168,7 +168,7 @@ export default function EditCandidate() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/jobs/${jobId}/candidates/${candidateId}`)}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
@@ -284,7 +284,7 @@ export default function EditCandidate() {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => navigate(`/jobs/${jobId}/candidates/${candidateId}`)} disabled={saving}>Cancelar</Button>
+                <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={saving}>Cancelar</Button>
                 <Button type="submit" disabled={saving || !name.trim()}>
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Salvar Alterações
