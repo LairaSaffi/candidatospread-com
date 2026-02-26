@@ -195,7 +195,7 @@ export default function Login() {
           <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
             <Briefcase className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Sistema de Vagas</CardTitle>
+          <CardTitle className="text-2xl">Candidatos Talent On Demand</CardTitle>
           <CardDescription>
             Entre com suas credenciais para acessar o painel
           </CardDescription>
