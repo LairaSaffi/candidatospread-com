@@ -23,7 +23,7 @@ export default function ChangePassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -127,6 +127,14 @@ export default function ChangePassword() {
                 "Definir Nova Senha"
               )}
             </Button>
+
+            <button
+              type="button"
+              onClick={async () => { await signOut(); navigate("/login"); }}
+              className="w-full text-sm text-muted-foreground hover:underline"
+            >
+              Sair e usar outra conta
+            </button>
           </form>
         </CardContent>
       </Card>
