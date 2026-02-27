@@ -360,6 +360,63 @@ export type Database = {
         }
         Relationships: []
       }
+      talent_share_candidates: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          id: string
+          talent_share_link_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          id?: string
+          talent_share_link_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          talent_share_link_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_share_candidates_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_share_candidates_talent_share_link_id_fkey"
+            columns: ["talent_share_link_id"]
+            isOneToOne: false
+            referencedRelation: "talent_share_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      talent_share_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          share_token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          share_token?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          share_token?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -402,6 +459,7 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"][]
       }
+      get_talents_by_share_token: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

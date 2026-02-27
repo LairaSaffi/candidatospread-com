@@ -48,6 +48,8 @@ export default function AvailableTalents() {
   const [openingFile, setOpeningFile] = useState<string | null>(null);
   const [generatingLink, setGeneratingLink] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
+  const [generatingBulkLink, setGeneratingBulkLink] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -181,11 +183,50 @@ export default function AvailableTalents() {
     }
   };
 
+  const toggleCandidateSelection = (candidateId: string) => {
+    setSelectedCandidates((prev) =>
+      prev.includes(candidateId) ? prev.filter((id) => id !== candidateId) : [...prev, candidateId]
+    );
+  };
+
+  const handleGenerateBulkLink = async () => {
+    if (selectedCandidates.length === 0) return;
+    setGeneratingBulkLink(true);
+    try {
+      const { data: linkData, error: linkError } = await supabase
+        .from("talent_share_links" as any)
+        .insert({ created_by: user?.id } as any)
+        .select("id, share_token")
+        .single();
+      if (linkError) throw linkError;
+
+      const rows = selectedCandidates.map((cid) => ({
+        talent_share_link_id: (linkData as any).id,
+        candidate_id: cid,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("talent_share_candidates" as any)
+        .insert(rows as any);
+      if (insertError) throw insertError;
+
+      const url = `${window.location.origin}/talents/${(linkData as any).share_token}`;
+      await navigator.clipboard.writeText(url);
+      setSelectedCandidates([]);
+      toast({
+        title: "Link copiado!",
+        description: `Link com ${rows.length} talento${rows.length > 1 ? "s" : ""} copiado para a área de transferência.`,
+      });
+    } catch (error: any) {
+      toast({ title: "Erro ao gerar link", description: error.message, variant: "destructive" });
+    } finally {
+      setGeneratingBulkLink(false);
+    }
+  };
+
   const seniorityLabel = (value: string | null) => {
     return SENIORITY_OPTIONS.find((o) => o.value === value)?.label || "—";
   };
-
-  const selectedTagNames = tags.filter((t) => selectedTags.includes(t.id)).map((t) => t.name);
 
   return (
     <div className="min-h-screen bg-background">
@@ -280,65 +321,107 @@ export default function AvailableTalents() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((c) => (
-              <Card key={c.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-xl">{c.name}</CardTitle>
-                  {c.seniority && (
-                    <div className="mt-1">
-                      <Badge variant="secondary">Senioridade: {seniorityLabel(c.seniority)}</Badge>
-                    </div>
+          <>
+            {/* Bulk action bar */}
+            {selectedCandidates.length > 0 && (
+              <div className="mb-4 flex items-center gap-3 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <span className="text-sm font-medium">
+                  {selectedCandidates.length} talento{selectedCandidates.length > 1 ? "s" : ""} selecionado{selectedCandidates.length > 1 ? "s" : ""}
+                </span>
+                <Button
+                  size="sm"
+                  onClick={handleGenerateBulkLink}
+                  disabled={generatingBulkLink}
+                >
+                  {generatingBulkLink ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Share2 className="h-3 w-3 mr-1" />
                   )}
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {c.tags.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-1">Skills</p>
-                      <div className="flex flex-wrap gap-1">
-                        {c.tags.map((tag) => (
-                          <Badge key={tag.id} variant="outline" className="text-xs">#{tag.name}</Badge>
-                        ))}
+                  Gerar Link com Selecionados
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedCandidates([])}
+                >
+                  Limpar seleção
+                </Button>
+              </div>
+            )}
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((c) => (
+                <Card
+                  key={c.id}
+                  className={`hover:shadow-lg transition-shadow ${selectedCandidates.includes(c.id) ? "ring-2 ring-primary" : ""}`}
+                >
+                  <CardHeader>
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={selectedCandidates.includes(c.id)}
+                        onCheckedChange={() => toggleCandidateSelection(c.id)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <CardTitle className="text-xl">{c.name}</CardTitle>
+                        {c.seniority && (
+                          <div className="mt-1">
+                            <Badge variant="secondary">Senioridade: {seniorityLabel(c.seniority)}</Badge>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    {c.cv_url && (
-                      <Button size="sm" variant="outline" onClick={() => handleOpenFile("cv", c.cv_url!)}>
-                        <FileText className="h-3 w-3 mr-1" /> CV
-                      </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {c.tags.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Skills</p>
+                        <div className="flex flex-wrap gap-1">
+                          {c.tags.map((tag) => (
+                            <Badge key={tag.id} variant="outline" className="text-xs">#{tag.name}</Badge>
+                          ))}
+                        </div>
+                      </div>
                     )}
-                    {c.technical_test_url && (
-                      <Button size="sm" variant="outline" onClick={() => handleOpenFile("test", c.technical_test_url!)}>
-                        <FileText className="h-3 w-3 mr-1" /> Teste
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant={copiedId === c.id ? "default" : "outline"}
-                      onClick={() => handleGenerateLink(c.id)}
-                      disabled={generatingLink === c.id}
-                    >
-                      {generatingLink === c.id ? (
-                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                      ) : copiedId === c.id ? (
-                        <Check className="h-3 w-3 mr-1" />
-                      ) : (
-                        <Share2 className="h-3 w-3 mr-1" />
+                    <div className="flex flex-wrap gap-2">
+                      {c.cv_url && (
+                        <Button size="sm" variant="outline" onClick={() => handleOpenFile("cv", c.cv_url!)}>
+                          <FileText className="h-3 w-3 mr-1" /> CV
+                        </Button>
                       )}
-                      {copiedId === c.id ? "Copiado!" : "Link"}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => navigate(`/jobs/${c.job_id}/candidates/${c.id}`)}>
-                      Ver detalhes
-                    </Button>
-                  </div>
-                  {c.hr_interview_notes && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">{c.hr_interview_notes}</p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      {c.technical_test_url && (
+                        <Button size="sm" variant="outline" onClick={() => handleOpenFile("test", c.technical_test_url!)}>
+                          <FileText className="h-3 w-3 mr-1" /> Teste
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant={copiedId === c.id ? "default" : "outline"}
+                        onClick={() => handleGenerateLink(c.id)}
+                        disabled={generatingLink === c.id}
+                      >
+                        {generatingLink === c.id ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : copiedId === c.id ? (
+                          <Check className="h-3 w-3 mr-1" />
+                        ) : (
+                          <Share2 className="h-3 w-3 mr-1" />
+                        )}
+                        {copiedId === c.id ? "Copiado!" : "Link"}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => navigate(`/jobs/${c.job_id}/candidates/${c.id}`)}>
+                        Ver detalhes
+                      </Button>
+                    </div>
+                    {c.hr_interview_notes && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">{c.hr_interview_notes}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </main>
     </div>
