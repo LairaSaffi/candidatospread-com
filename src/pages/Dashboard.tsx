@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter, Tag, Star } from "lucide-react";
+import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter, Tag, Star, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { NotificationBell } from "@/components/NotificationBell";
 import logoSpread from "@/assets/logo-spread.jpg";
 import { useToast } from "@/hooks/use-toast";
@@ -111,6 +112,20 @@ export default function Dashboard() {
     navigate("/login");
   };
 
+  const exportJobsToExcel = () => {
+    const data = filteredJobs.map((job) => ({
+      Título: job.title,
+      Cliente: job.client || "—",
+      Status: job.status === "open" ? "Aberta" : job.status === "closed" ? "Fechada" : "Em espera",
+      Candidatos: job.candidate_count || 0,
+      "Data de Criação": new Date(job.created_at).toLocaleDateString("pt-BR"),
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Vagas");
+    XLSX.writeFile(wb, "vagas.xlsx");
+  };
+
   const copyEvaluationLink = async (jobId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -203,10 +218,18 @@ export default function Dashboard() {
             </p>
           </div>
           {canCreateJobs && (
-            <Button onClick={() => navigate("/jobs/new")} className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Vaga
-            </Button>
+            <div className="flex gap-2">
+              {isAdmin && (
+                <Button variant="outline" onClick={exportJobsToExcel}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar Excel
+                </Button>
+              )}
+              <Button onClick={() => navigate("/jobs/new")} className="bg-primary hover:bg-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Vaga
+              </Button>
+            </div>
           )}
         </div>
 

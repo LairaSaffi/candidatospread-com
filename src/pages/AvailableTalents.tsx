@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Search, Users, Share2, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, FileText, Search, Users, Share2, Check, Loader2, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { openSignedFile } from "@/lib/storage";
@@ -228,6 +229,19 @@ export default function AvailableTalents() {
     return SENIORITY_OPTIONS.find((o) => o.value === value)?.label || "—";
   };
 
+  const exportTalentsToExcel = () => {
+    const data = filtered.map((c) => ({
+      Nome: c.name,
+      Senioridade: seniorityLabel(c.seniority),
+      Skills: c.tags.map((t) => t.name).join(", ") || "—",
+      "Parecer RH": c.hr_interview_notes || "—",
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Talentos");
+    XLSX.writeFile(wb, "talentos.xlsx");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -240,12 +254,20 @@ export default function AvailableTalents() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold flex items-center gap-2">
-            <Users className="h-8 w-8" />
-            Talentos Disponíveis
-          </h2>
-          <p className="text-muted-foreground mt-1">Candidatos disponíveis para alocação</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-3xl font-bold flex items-center gap-2">
+              <Users className="h-8 w-8" />
+              Talentos Disponíveis
+            </h2>
+            <p className="text-muted-foreground mt-1">Candidatos disponíveis para alocação</p>
+          </div>
+          {filtered.length > 0 && (
+            <Button variant="outline" onClick={exportTalentsToExcel}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar Excel
+            </Button>
+          )}
         </div>
 
         {/* Filters */}
