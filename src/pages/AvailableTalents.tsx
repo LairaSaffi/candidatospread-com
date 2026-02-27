@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Search, Users } from "lucide-react";
+import { ArrowLeft, FileText, Search, Users, Share2, Check, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { openSignedFile } from "@/lib/storage";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useAuth } from "@/hooks/useAuth";
 
 const SENIORITY_OPTIONS = [
   { value: "junior", label: "Júnior" },
@@ -41,10 +44,13 @@ export default function AvailableTalents() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [seniorityFilter, setSeniorityFilter] = useState("all");
-  const [tagFilter, setTagFilter] = useState("all");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [openingFile, setOpeningFile] = useState<string | null>(null);
+  const [generatingLink, setGeneratingLink] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadData();
@@ -52,7 +58,7 @@ export default function AvailableTalents() {
 
   useEffect(() => {
     applyFilters();
-  }, [candidates, searchTerm, seniorityFilter, tagFilter]);
+  }, [candidates, searchTerm, seniorityFilter, selectedTags]);
 
   const loadData = async () => {
     try {
@@ -67,7 +73,6 @@ export default function AvailableTalents() {
 
       if (candidatesResult.error) throw candidatesResult.error;
 
-      // Load tags for each candidate
       const candidateIds = candidatesResult.data?.map((c: any) => c.id) || [];
       let candidateTagsMap: Record<string, Tag[]> = {};
 
@@ -113,10 +118,16 @@ export default function AvailableTalents() {
     if (seniorityFilter !== "all") {
       result = result.filter((c) => c.seniority === seniorityFilter);
     }
-    if (tagFilter !== "all") {
-      result = result.filter((c) => c.tags.some((t) => t.id === tagFilter));
+    if (selectedTags.length > 0) {
+      result = result.filter((c) => selectedTags.every((tagId) => c.tags.some((t) => t.id === tagId)));
     }
     setFiltered(result);
+  };
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+    );
   };
 
   const handleOpenFile = async (type: "cv" | "test", filePath: string) => {
@@ -135,9 +146,46 @@ export default function AvailableTalents() {
     }
   };
 
+  const handleGenerateLink = async (candidateId: string) => {
+    setGeneratingLink(candidateId);
+    try {
+      const { data: existing } = await supabase
+        .from("candidate_share_links" as any)
+        .select("share_token")
+        .eq("candidate_id", candidateId)
+        .limit(1)
+        .maybeSingle();
+
+      let token: string;
+      if ((existing as any)?.share_token) {
+        token = (existing as any).share_token;
+      } else {
+        const { data: newLink, error } = await supabase
+          .from("candidate_share_links" as any)
+          .insert({ candidate_id: candidateId, created_by: user?.id } as any)
+          .select("share_token")
+          .single();
+        if (error) throw error;
+        token = (newLink as any).share_token;
+      }
+
+      const url = `${window.location.origin}/candidate/${token}`;
+      await navigator.clipboard.writeText(url);
+      setCopiedId(candidateId);
+      setTimeout(() => setCopiedId(null), 3000);
+      toast({ title: "Link copiado!", description: "O link do candidato foi copiado para a área de transferência." });
+    } catch (error: any) {
+      toast({ title: "Erro ao gerar link", description: error.message, variant: "destructive" });
+    } finally {
+      setGeneratingLink(null);
+    }
+  };
+
   const seniorityLabel = (value: string | null) => {
     return SENIORITY_OPTIONS.find((o) => o.value === value)?.label || "—";
   };
+
+  const selectedTagNames = tags.filter((t) => selectedTags.includes(t.id)).map((t) => t.name);
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,17 +228,41 @@ export default function AvailableTalents() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={tagFilter} onValueChange={setTagFilter}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Tag" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as tags</SelectItem>
-                  {tags.map((tag) => (
-                    <SelectItem key={tag.id} value={tag.id}>#{tag.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[220px] justify-start">
+                    {selectedTags.length === 0
+                      ? "Filtrar por tags..."
+                      : `${selectedTags.length} tag${selectedTags.length > 1 ? "s" : ""} selecionada${selectedTags.length > 1 ? "s" : ""}`}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[220px] p-2" align="start">
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                    {tags.map((tag) => (
+                      <label
+                        key={tag.id}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer text-sm"
+                      >
+                        <Checkbox
+                          checked={selectedTags.includes(tag.id)}
+                          onCheckedChange={() => toggleTag(tag.id)}
+                        />
+                        #{tag.name}
+                      </label>
+                    ))}
+                  </div>
+                  {selectedTags.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={() => setSelectedTags([])}
+                    >
+                      Limpar filtro
+                    </Button>
+                  )}
+                </PopoverContent>
+              </Popover>
             </div>
           </CardContent>
         </Card>
@@ -212,19 +284,22 @@ export default function AvailableTalents() {
             {filtered.map((c) => (
               <Card key={c.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                <CardTitle className="text-xl">{c.name}</CardTitle>
-                {c.seniority && (
-                  <div className="mt-1">
-                    <Badge variant="secondary">{seniorityLabel(c.seniority)}</Badge>
-                  </div>
-                )}
+                  <CardTitle className="text-xl">{c.name}</CardTitle>
+                  {c.seniority && (
+                    <div className="mt-1">
+                      <Badge variant="secondary">Senioridade: {seniorityLabel(c.seniority)}</Badge>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {c.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {c.tags.map((tag) => (
-                        <Badge key={tag.id} variant="outline" className="text-xs">#{tag.name}</Badge>
-                      ))}
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Skills</p>
+                      <div className="flex flex-wrap gap-1">
+                        {c.tags.map((tag) => (
+                          <Badge key={tag.id} variant="outline" className="text-xs">#{tag.name}</Badge>
+                        ))}
+                      </div>
                     </div>
                   )}
                   <div className="flex flex-wrap gap-2">
@@ -238,6 +313,21 @@ export default function AvailableTalents() {
                         <FileText className="h-3 w-3 mr-1" /> Teste
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      variant={copiedId === c.id ? "default" : "outline"}
+                      onClick={() => handleGenerateLink(c.id)}
+                      disabled={generatingLink === c.id}
+                    >
+                      {generatingLink === c.id ? (
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      ) : copiedId === c.id ? (
+                        <Check className="h-3 w-3 mr-1" />
+                      ) : (
+                        <Share2 className="h-3 w-3 mr-1" />
+                      )}
+                      {copiedId === c.id ? "Copiado!" : "Link"}
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => navigate(`/jobs/${c.job_id}/candidates/${c.id}`)}>
                       Ver detalhes
                     </Button>
