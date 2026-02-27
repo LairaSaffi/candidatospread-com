@@ -21,6 +21,14 @@ interface Job {
   status: "open" | "closed" | "on_hold";
   created_at: string;
   candidate_count?: number;
+  spread_manager_id: string | null;
+  commercial_responsible_id: string | null;
+  recruiter_responsible_id: string | null;
+}
+
+interface UserProfile {
+  id: string;
+  full_name: string;
 }
 
 const roleLabels: Record<string, string> = {
@@ -36,18 +44,23 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
+  const [recruiterFilter, setRecruiterFilter] = useState<string>("all");
+  const [managerFilter, setManagerFilter] = useState<string>("all");
+  const [commercialFilter, setCommercialFilter] = useState<string>("all");
   const [clients, setClients] = useState<string[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile, roles, isAdmin, canCreateJobs, canEditJobs, signOut } = useAuth();
 
   useEffect(() => {
     loadJobs();
+    loadUsers();
   }, []);
 
   useEffect(() => {
     filterJobs();
-  }, [jobs, searchTerm, statusFilter, clientFilter]);
+  }, [jobs, searchTerm, statusFilter, clientFilter, recruiterFilter, managerFilter, commercialFilter]);
 
   const loadJobs = async () => {
     try {
@@ -86,6 +99,19 @@ export default function Dashboard() {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("is_active", true)
+        .order("full_name");
+      setUsers(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar usuários:", error);
+    }
+  };
+
   const filterJobs = () => {
     let filtered = [...jobs];
 
@@ -102,6 +128,18 @@ export default function Dashboard() {
 
     if (clientFilter !== "all") {
       filtered = filtered.filter((job) => job.client === clientFilter);
+    }
+
+    if (recruiterFilter !== "all") {
+      filtered = filtered.filter((job) => job.recruiter_responsible_id === recruiterFilter);
+    }
+
+    if (managerFilter !== "all") {
+      filtered = filtered.filter((job) => job.spread_manager_id === managerFilter);
+    }
+
+    if (commercialFilter !== "all") {
+      filtered = filtered.filter((job) => job.commercial_responsible_id === commercialFilter);
     }
 
     setFilteredJobs(filtered);
@@ -270,6 +308,39 @@ export default function Dashboard() {
                     <SelectItem key={client} value={client}>
                       {client}
                     </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={recruiterFilter} onValueChange={setRecruiterFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Recrutador" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os recrutadores</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={managerFilter} onValueChange={setManagerFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Gestor Spread" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os gestores</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={commercialFilter} onValueChange={setCommercialFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Comercial" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os comerciais</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
