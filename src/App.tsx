@@ -21,6 +21,7 @@ import AdminCandidates from "./pages/AdminCandidates";
 import AdminTags from "./pages/AdminTags";
 import AvailableTalents from "./pages/AvailableTalents";
 import ViewCandidate from "./pages/ViewCandidate";
+import ViewTalents from "./pages/ViewTalents";
 import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/bootstrap" element={<Bootstrap />} />
             <Route path="/evaluate/:token" element={<EvaluateJob />} />
             <Route path="/candidate/:token" element={<ViewCandidate />} />
+            <Route path="/talents/:token" element={<ViewTalents />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route
               path="/"
