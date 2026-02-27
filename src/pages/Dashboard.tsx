@@ -116,10 +116,11 @@ export default function Dashboard() {
       if (rolesData && profilesData) {
         const gestaoIds = new Set(rolesData.filter((r) => r.role === "gestao_operacao").map((r) => r.user_id));
         const comercialIds = new Set(rolesData.filter((r) => r.role === "comercial").map((r) => r.user_id));
+        const adminIds = new Set(rolesData.filter((r) => r.role === "admin").map((r) => r.user_id));
 
         setManagers(profilesData.filter((p) => gestaoIds.has(p.id)));
         setCommercials(profilesData.filter((p) => comercialIds.has(p.id)));
-        setRecruiters(profilesData);
+        setRecruiters(profilesData.filter((p) => adminIds.has(p.id) && p.id !== "a9df932a-006c-4b60-8727-78d963cb1dc2"));
       }
     } catch (error) {
       console.error("Erro ao carregar usuários:", error);
