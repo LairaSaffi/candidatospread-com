@@ -191,8 +191,8 @@ export default function NewCandidate() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hrNotes">Parecer RH</Label>
-                <Textarea id="hrNotes" value={hrNotes} onChange={(e) => setHrNotes(e.target.value)} placeholder="Parecer do RH sobre o candidato" rows={6} />
+                <Label htmlFor="hrNotes">Parecer RH *</Label>
+                <Textarea id="hrNotes" value={hrNotes} onChange={(e) => setHrNotes(e.target.value)} placeholder="Parecer do RH sobre o candidato" rows={6} required />
               </div>
 
               <div className="flex gap-3 pt-4">
