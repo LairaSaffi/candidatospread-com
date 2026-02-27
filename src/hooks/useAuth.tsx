@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, ReactNode } fro
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "admin" | "comercial" | "gestao_operacao";
+type AppRole = "admin" | "comercial" | "gestao_operacao" | "visualizacao_geral";
 
 interface Profile {
   id: string;
@@ -20,6 +20,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isGestao: boolean;
   isComercial: boolean;
+  isVisualizacao: boolean;
   mustChangePassword: boolean;
   canCreateJobs: boolean;
   canEditJobs: boolean;
@@ -127,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = roles.includes("admin");
   const isGestao = roles.includes("gestao_operacao");
   const isComercial = roles.includes("comercial");
+  const isVisualizacao = roles.includes("visualizacao_geral");
   const mustChangePassword = profile?.must_change_password ?? false;
 
   const canCreateJobs = isAdmin || isGestao;
@@ -143,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         isGestao,
         isComercial,
+        isVisualizacao,
         mustChangePassword,
         canCreateJobs,
         canEditJobs,
