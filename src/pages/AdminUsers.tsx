@@ -19,7 +19,7 @@ const createUserSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  role: z.enum(["admin", "comercial", "gestao_operacao"]),
+  role: z.enum(["admin", "comercial", "gestao_operacao", "visualizacao_geral"]),
 });
 
 interface UserWithRole {
@@ -35,6 +35,7 @@ const roleLabels: Record<string, string> = {
   admin: "Administrador",
   comercial: "Comercial",
   gestao_operacao: "Gestão da Operação",
+  visualizacao_geral: "Visualização Geral",
 };
 
 export default function AdminUsers() {
@@ -380,6 +381,7 @@ export default function AdminUsers() {
                       <SelectItem value="admin">Administrador</SelectItem>
                       <SelectItem value="comercial">Comercial</SelectItem>
                       <SelectItem value="gestao_operacao">Gestão da Operação</SelectItem>
+                      <SelectItem value="visualizacao_geral">Visualização Geral</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.role && (

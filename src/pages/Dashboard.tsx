@@ -35,6 +35,7 @@ const roleLabels: Record<string, string> = {
   admin: "Administrador",
   comercial: "Comercial",
   gestao_operacao: "Gestão da Operação",
+  visualizacao_geral: "Visualização Geral",
 };
 
 export default function Dashboard() {
