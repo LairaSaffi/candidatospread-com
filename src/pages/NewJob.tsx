@@ -133,13 +133,14 @@ export default function NewJob() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Descrição da Vaga</Label>
+                <Label htmlFor="description">Descrição da Vaga *</Label>
                 <Textarea
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Descreva os requisitos e responsabilidades da vaga"
                   rows={6}
+                  required
                 />
               </div>
 
