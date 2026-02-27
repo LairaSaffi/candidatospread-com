@@ -48,7 +48,9 @@ export default function Dashboard() {
   const [managerFilter, setManagerFilter] = useState<string>("all");
   const [commercialFilter, setCommercialFilter] = useState<string>("all");
   const [clients, setClients] = useState<string[]>([]);
-  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [managers, setManagers] = useState<UserProfile[]>([]);
+  const [commercials, setCommercials] = useState<UserProfile[]>([]);
+  const [recruiters, setRecruiters] = useState<UserProfile[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile, roles, isAdmin, canCreateJobs, canEditJobs, signOut } = useAuth();
@@ -101,12 +103,24 @@ export default function Dashboard() {
 
   const loadUsers = async () => {
     try {
-      const { data } = await supabase
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+
+      const { data: profilesData } = await supabase
         .from("profiles")
         .select("id, full_name")
         .eq("is_active", true)
         .order("full_name");
-      setUsers(data || []);
+
+      if (rolesData && profilesData) {
+        const gestaoIds = new Set(rolesData.filter((r) => r.role === "gestao_operacao").map((r) => r.user_id));
+        const comercialIds = new Set(rolesData.filter((r) => r.role === "comercial").map((r) => r.user_id));
+
+        setManagers(profilesData.filter((p) => gestaoIds.has(p.id)));
+        setCommercials(profilesData.filter((p) => comercialIds.has(p.id)));
+        setRecruiters(profilesData);
+      }
     } catch (error) {
       console.error("Erro ao carregar usuários:", error);
     }
@@ -317,7 +331,7 @@ export default function Dashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os recrutadores</SelectItem>
-                  {users.map((u) => (
+                  {recruiters.map((u) => (
                     <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -328,7 +342,7 @@ export default function Dashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os gestores</SelectItem>
-                  {users.map((u) => (
+                  {managers.map((u) => (
                     <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -339,7 +353,7 @@ export default function Dashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os comerciais</SelectItem>
-                  {users.map((u) => (
+                  {commercials.map((u) => (
                     <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
                   ))}
                 </SelectContent>
