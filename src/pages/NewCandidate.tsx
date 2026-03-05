@@ -41,6 +41,7 @@ interface ExistingCandidate {
 export default function NewCandidate() {
   const { jobId } = useParams();
   const [name, setName] = useState("");
+  const [position, setPosition] = useState("");
   const [seniority, setSeniority] = useState("");
   const [candidateType, setCandidateType] = useState("externo");
   const [salaryExpectation, setSalaryExpectation] = useState("");
@@ -95,6 +96,7 @@ export default function NewCandidate() {
           name,
           seniority: seniority || null,
           candidate_type: candidateType,
+          position: position.trim() || null,
           salary_expectation: salaryExpectation.trim() || null,
           hr_interview_notes: hrNotes || null,
           status: "pending",
@@ -233,6 +235,11 @@ export default function NewCandidate() {
       <div className="space-y-2">
         <Label htmlFor="name">Nome *</Label>
         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome do candidato" required />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="position">Cargo</Label>
+        <Input id="position" value={position} onChange={(e) => setPosition(e.target.value)} placeholder="Ex: Desenvolvedor Full Stack" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

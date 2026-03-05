@@ -30,6 +30,7 @@ interface Tag {
 interface TalentCandidate {
   id: string;
   name: string;
+  position: string | null;
   seniority: string | null;
   cv_url: string | null;
   technical_test_url: string | null;
@@ -71,7 +72,7 @@ export default function AvailableTalents() {
       const [candidatesResult, tagsResult] = await Promise.all([
         supabase
           .from("candidates")
-          .select("id, name, seniority, cv_url, technical_test_url, hr_interview_notes, salary_expectation, candidate_type, job_id, internal_status")
+          .select("id, name, position, seniority, cv_url, technical_test_url, hr_interview_notes, salary_expectation, candidate_type, job_id, internal_status")
           .eq("internal_status", "disponivel")
           .order("name"),
         supabase.from("tags").select("*").order("name"),
@@ -99,6 +100,7 @@ export default function AvailableTalents() {
       const mapped: TalentCandidate[] = (candidatesResult.data || []).map((c: any) => ({
         id: c.id,
         name: c.name,
+        position: c.position,
         seniority: c.seniority,
         cv_url: c.cv_url,
         technical_test_url: c.technical_test_url,
@@ -121,7 +123,8 @@ export default function AvailableTalents() {
   const applyFilters = () => {
     let result = [...candidates];
     if (searchTerm) {
-      result = result.filter((c) => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      const term = searchTerm.toLowerCase();
+      result = result.filter((c) => c.name.toLowerCase().includes(term) || (c.position && c.position.toLowerCase().includes(term)));
     }
     if (seniorityFilter !== "all") {
       result = result.filter((c) => c.seniority === seniorityFilter);
@@ -240,6 +243,7 @@ export default function AvailableTalents() {
   const exportTalentsToExcel = () => {
     const data = filtered.map((c) => ({
       Nome: c.name,
+      Cargo: c.position || "—",
       Tipo: c.candidate_type === "interno" ? "Interno" : "Externo",
       Senioridade: seniorityLabel(c.seniority),
       Skills: c.tags.map((t) => t.name).join(", ") || "—",
@@ -293,7 +297,7 @@ export default function AvailableTalents() {
               <div className="flex-1 min-w-[200px]">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Buscar por nome..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
+                  <Input placeholder="Buscar por nome ou cargo..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
                 </div>
               </div>
               <Select value={seniorityFilter} onValueChange={setSeniorityFilter}>
@@ -413,6 +417,9 @@ export default function AvailableTalents() {
                       />
                       <div className="flex-1">
                         <CardTitle className="text-xl">{c.name}</CardTitle>
+                        {c.position && (
+                          <p className="text-sm text-muted-foreground">{c.position}</p>
+                        )}
                         <div className="flex flex-wrap gap-1 mt-1">
                           {c.candidate_type && (
                             <Badge variant={c.candidate_type === "interno" ? "default" : "secondary"}>
