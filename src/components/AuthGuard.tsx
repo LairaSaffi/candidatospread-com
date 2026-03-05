@@ -36,10 +36,8 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Acesso Pendente</h2>
-          <p className="text-muted-foreground">
-            Seu acesso ainda não foi configurado. Entre em contato com o administrador.
-          </p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Aguarde um momento</h2>
         </div>
       </div>
     );
