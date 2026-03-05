@@ -38,6 +38,7 @@ interface Candidate {
   seniority: string | null;
   status: string;
   internal_status: string | null;
+  salary_expectation: string | null;
   created_at: string;
   job_id: string;
 }
@@ -102,7 +103,7 @@ export default function CandidateDetails() {
       if (jobResult.error) throw jobResult.error;
 
       const candidateData = candidateResult.data as any;
-      setCandidate({ ...candidateData, internal_status: candidateData.internal_status || null } as Candidate);
+      setCandidate({ ...candidateData, internal_status: candidateData.internal_status || null, salary_expectation: candidateData.salary_expectation || null } as Candidate);
       setJob(jobResult.data);
 
       // Load candidate tags
@@ -422,6 +423,18 @@ export default function CandidateDetails() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Pretensão Salarial */}
+        {candidate.salary_expectation && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Pretensão Salarial</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{candidate.salary_expectation}</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Parecer RH */}
         {candidate.hr_interview_notes && (

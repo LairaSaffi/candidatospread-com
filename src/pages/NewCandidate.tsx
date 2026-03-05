@@ -28,6 +28,7 @@ export default function NewCandidate() {
   const { jobId } = useParams();
   const [name, setName] = useState("");
   const [seniority, setSeniority] = useState("");
+  const [salaryExpectation, setSalaryExpectation] = useState("");
   const [hrNotes, setHrNotes] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [testFile, setTestFile] = useState<File | null>(null);
@@ -71,6 +72,7 @@ export default function NewCandidate() {
           job_id: jobId,
           name,
           seniority: seniority || null,
+          salary_expectation: salaryExpectation.trim() || null,
           hr_interview_notes: hrNotes || null,
           status: "pending",
         })
@@ -168,6 +170,11 @@ export default function NewCandidate() {
                     ))
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="salaryExpectation">Pretensão Salarial</Label>
+                <Input id="salaryExpectation" value={salaryExpectation} onChange={(e) => setSalaryExpectation(e.target.value)} placeholder="Ex: R$ 8.000 - R$ 10.000" />
               </div>
 
               <div className="space-y-2">

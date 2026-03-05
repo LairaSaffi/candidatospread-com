@@ -34,6 +34,7 @@ interface TalentCandidate {
   cv_url: string | null;
   technical_test_url: string | null;
   hr_interview_notes: string | null;
+  salary_expectation: string | null;
   job_id: string;
   tags: Tag[];
 }
@@ -68,7 +69,7 @@ export default function AvailableTalents() {
       const [candidatesResult, tagsResult] = await Promise.all([
         supabase
           .from("candidates")
-          .select("id, name, seniority, cv_url, technical_test_url, hr_interview_notes, job_id, internal_status")
+          .select("id, name, seniority, cv_url, technical_test_url, hr_interview_notes, salary_expectation, job_id, internal_status")
           .eq("internal_status", "disponivel")
           .order("name"),
         supabase.from("tags").select("*").order("name"),
@@ -100,6 +101,7 @@ export default function AvailableTalents() {
         cv_url: c.cv_url,
         technical_test_url: c.technical_test_url,
         hr_interview_notes: c.hr_interview_notes,
+        salary_expectation: c.salary_expectation,
         job_id: c.job_id,
         tags: candidateTagsMap[c.id] || [],
       }));
@@ -234,6 +236,7 @@ export default function AvailableTalents() {
       Nome: c.name,
       Senioridade: seniorityLabel(c.seniority),
       Skills: c.tags.map((t) => t.name).join(", ") || "—",
+      "Pretensão Salarial": c.salary_expectation || "—",
       "Parecer RH": c.hr_interview_notes || "—",
     }));
     const ws = XLSX.utils.json_to_sheet(data);
@@ -436,6 +439,12 @@ export default function AvailableTalents() {
                         Ver detalhes
                       </Button>
                     </div>
+                    {c.salary_expectation && (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">Pretensão Salarial</p>
+                        <p className="text-sm">{c.salary_expectation}</p>
+                      </div>
+                    )}
                     {c.hr_interview_notes && (
                       <p className="text-sm text-muted-foreground line-clamp-2">{c.hr_interview_notes}</p>
                     )}
