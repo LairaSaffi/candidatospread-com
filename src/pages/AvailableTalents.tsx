@@ -236,6 +236,7 @@ export default function AvailableTalents() {
       Nome: c.name,
       Senioridade: seniorityLabel(c.seniority),
       Skills: c.tags.map((t) => t.name).join(", ") || "—",
+      "Pretensão Salarial": c.salary_expectation || "—",
       "Parecer RH": c.hr_interview_notes || "—",
     }));
     const ws = XLSX.utils.json_to_sheet(data);
