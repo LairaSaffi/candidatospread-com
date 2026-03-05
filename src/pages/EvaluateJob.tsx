@@ -270,11 +270,7 @@ export default function EvaluateJob() {
               )}
             </div>
             {job.description && (
-              <CardContent className="pt-4">
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                  {job.description}
-                </p>
-              </CardContent>
+              <JobDescriptionCollapsible description={job.description} />
             )}
           </Card>
 
@@ -310,11 +306,7 @@ export default function EvaluateJob() {
             )}
           </div>
           {job.description && (
-            <CardContent className="pt-4">
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                {job.description}
-              </p>
-            </CardContent>
+            <JobDescriptionCollapsible description={job.description} />
           )}
         </Card>
 
