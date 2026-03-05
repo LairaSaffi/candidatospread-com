@@ -17,6 +17,7 @@ interface CandidateWithDetails {
   id: string;
   name: string;
   status: string;
+  salary_expectation: string | null;
   created_at: string;
   job_id: string;
   job_title: string;
@@ -76,6 +77,7 @@ export default function AdminCandidates() {
           id,
           name,
           status,
+          salary_expectation,
           created_at,
           job_id,
           jobs (
@@ -162,6 +164,7 @@ export default function AdminCandidates() {
           id: c.id,
           name: c.name,
           status: c.status,
+          salary_expectation: c.salary_expectation || null,
           created_at: c.created_at,
           job_id: c.job_id,
           job_title: c.jobs?.title || "Vaga não encontrada",
@@ -261,6 +264,7 @@ export default function AdminCandidates() {
         "Cliente",
         "Gestor Responsável",
         "Recrutador",
+        "Pretensão Salarial",
         "Data de Envio",
         "Status Avaliação",
         "Avaliado por",
@@ -272,6 +276,7 @@ export default function AdminCandidates() {
         c.client || "-",
         c.responsible_manager || "-",
         c.recruiter_name || "-",
+        c.salary_expectation || "-",
         format(new Date(c.created_at), "dd/MM/yyyy", { locale: ptBR }),
         c.evaluation_decision 
           ? evaluationLabels[c.evaluation_decision] || c.evaluation_decision
@@ -423,6 +428,7 @@ export default function AdminCandidates() {
                       <TableHead>Cliente</TableHead>
                       <TableHead>Gestor Responsável</TableHead>
                       <TableHead>Recrutador</TableHead>
+                      <TableHead>Pretensão</TableHead>
                       <TableHead>Data de Envio</TableHead>
                       <TableHead>Status Avaliação</TableHead>
                       <TableHead>Avaliado por</TableHead>
@@ -440,6 +446,7 @@ export default function AdminCandidates() {
                         <TableCell>{candidate.client || "-"}</TableCell>
                         <TableCell>{candidate.responsible_manager || "-"}</TableCell>
                         <TableCell>{candidate.recruiter_name || "-"}</TableCell>
+                        <TableCell>{candidate.salary_expectation || "-"}</TableCell>
                         <TableCell>
                           {format(new Date(candidate.created_at), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
