@@ -70,20 +70,14 @@ export default function EditCandidate() {
 
   const loadData = async () => {
     try {
-      const queries: Promise<any>[] = [
-        supabase.from("candidates").select("*").eq("id", candidateId).maybeSingle(),
-        supabase.from("tags").select("*").order("name"),
-        supabase.from("candidate_tags").select("tag_id").eq("candidate_id", candidateId!),
-      ];
+      const candidateResult = await supabase.from("candidates").select("*").eq("id", candidateId).maybeSingle();
+      const tagsResult = await supabase.from("tags").select("*").order("name");
+      const candidateTagsResult = await supabase.from("candidate_tags").select("tag_id").eq("candidate_id", candidateId!);
+      
+      let jobResult: any = null;
       if (jobId) {
-        queries.push(supabase.from("jobs").select("id, title").eq("id", jobId).maybeSingle());
+        jobResult = await supabase.from("jobs").select("id, title").eq("id", jobId).maybeSingle();
       }
-
-      const results = await Promise.all(queries);
-      const candidateResult = results[0];
-      const tagsResult = results[1];
-      const candidateTagsResult = results[2];
-      const jobResult = jobId ? results[3] : null;
 
       if (candidateResult.error) throw candidateResult.error;
 
