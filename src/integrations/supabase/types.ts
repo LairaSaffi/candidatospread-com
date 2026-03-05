@@ -65,6 +65,42 @@ export type Database = {
           },
         ]
       }
+      candidate_jobs: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          id: string
+          job_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_jobs_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_jobs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_share_links: {
         Row: {
           candidate_id: string
@@ -135,12 +171,13 @@ export type Database = {
       }
       candidates: {
         Row: {
+          candidate_type: string | null
           created_at: string
           cv_url: string | null
           hr_interview_notes: string | null
           id: string
           internal_status: string | null
-          job_id: string
+          job_id: string | null
           name: string
           salary_expectation: string | null
           seniority: string | null
@@ -149,12 +186,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          candidate_type?: string | null
           created_at?: string
           cv_url?: string | null
           hr_interview_notes?: string | null
           id?: string
           internal_status?: string | null
-          job_id: string
+          job_id?: string | null
           name: string
           salary_expectation?: string | null
           seniority?: string | null
@@ -163,12 +201,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          candidate_type?: string | null
           created_at?: string
           cv_url?: string | null
           hr_interview_notes?: string | null
           id?: string
           internal_status?: string | null
-          job_id?: string
+          job_id?: string | null
           name?: string
           salary_expectation?: string | null
           seniority?: string | null
