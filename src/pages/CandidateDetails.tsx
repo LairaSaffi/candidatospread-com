@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ArrowLeft, FileText, Loader2, ExternalLink, CheckCircle, XCircle, User, Link2, Pencil, Trash2, Share2, Copy, Check } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, ExternalLink, CheckCircle, XCircle, User, Link2, Pencil, Trash2, Share2, Copy, Check, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { openSignedFile } from "@/lib/storage";
 import { InternalEvaluationDialog } from "@/components/InternalEvaluationDialog";
@@ -48,6 +48,13 @@ interface Job {
   title: string;
 }
 
+interface LinkedJob {
+  id: string;
+  title: string;
+  client: string | null;
+  status: string;
+}
+
 interface CandidateEvaluation {
   id: string;
   decision: string | null;
@@ -68,6 +75,7 @@ export default function CandidateDetails() {
   const [job, setJob] = useState<Job | null>(null);
   const [evaluation, setEvaluation] = useState<CandidateEvaluation | null>(null);
   const [candidateTags, setCandidateTags] = useState<CandidateTag[]>([]);
+  const [linkedJobs, setLinkedJobs] = useState<LinkedJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [openingFile, setOpeningFile] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -107,7 +115,6 @@ export default function CandidateDetails() {
         if (jobResult.error) throw jobResult.error;
       }
 
-
       const candidateData = candidateResult.data as any;
       setCandidate({ ...candidateData, internal_status: candidateData.internal_status || null, salary_expectation: candidateData.salary_expectation || null } as Candidate);
       setJob(jobResult?.data || null);
@@ -119,6 +126,19 @@ export default function CandidateDetails() {
         .eq("candidate_id", candidateId!);
       if (ctData) {
         setCandidateTags(ctData.map((ct: any) => ct.tags).filter(Boolean));
+      }
+
+      // Load linked jobs via candidate_jobs
+      const { data: cjData } = await supabase
+        .from("candidate_jobs" as any)
+        .select("job_id, jobs(id, title, client, status)")
+        .eq("candidate_id", candidateId!);
+      if (cjData) {
+        setLinkedJobs(
+          (cjData as any[])
+            .map((cj: any) => cj.jobs)
+            .filter(Boolean)
+        );
       }
 
       // Buscar avaliação do candidato
@@ -454,6 +474,37 @@ export default function CandidateDetails() {
             </CardHeader>
             <CardContent>
               <p className="whitespace-pre-wrap">{candidate.hr_interview_notes}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Histórico de Vagas */}
+        {linkedJobs.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                Vagas Vinculadas ({linkedJobs.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {linkedJobs.map((lj) => (
+                  <div
+                    key={lj.id}
+                    className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 cursor-pointer"
+                    onClick={() => navigate(`/jobs/${lj.id}`)}
+                  >
+                    <div>
+                      <p className="font-medium">{lj.title}</p>
+                      {lj.client && (
+                        <p className="text-sm text-muted-foreground">Cliente: {lj.client}</p>
+                      )}
+                    </div>
+                    <StatusBadge status={lj.status} />
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
