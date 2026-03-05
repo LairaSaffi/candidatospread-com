@@ -478,6 +478,37 @@ export default function CandidateDetails() {
           </Card>
         )}
 
+        {/* Histórico de Vagas */}
+        {linkedJobs.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                Vagas Vinculadas ({linkedJobs.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {linkedJobs.map((lj) => (
+                  <div
+                    key={lj.id}
+                    className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 cursor-pointer"
+                    onClick={() => navigate(`/jobs/${lj.id}`)}
+                  >
+                    <div>
+                      <p className="font-medium">{lj.title}</p>
+                      {lj.client && (
+                        <p className="text-sm text-muted-foreground">Cliente: {lj.client}</p>
+                      )}
+                    </div>
+                    <StatusBadge status={lj.status} />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
       </main>
     </div>
   );
