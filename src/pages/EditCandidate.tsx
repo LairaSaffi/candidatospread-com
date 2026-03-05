@@ -27,6 +27,11 @@ const INTERNAL_STATUS_OPTIONS = [
   { value: "reprovado_interno", label: "Reprovado" },
 ];
 
+const CANDIDATE_TYPE_OPTIONS = [
+  { value: "interno", label: "Interno" },
+  { value: "externo", label: "Externo" },
+];
+
 
 interface Tag {
   id: string;
@@ -46,6 +51,7 @@ export default function EditCandidate() {
 
   const [name, setName] = useState("");
   const [seniority, setSeniority] = useState("");
+  const [candidateType, setCandidateType] = useState("externo");
   const [internalStatus, setInternalStatus] = useState("");
   const [salaryExpectation, setSalaryExpectation] = useState("");
   const [hrNotes, setHrNotes] = useState("");
@@ -78,6 +84,7 @@ export default function EditCandidate() {
         setCandidate(candidateResult.data);
         setName(candidateResult.data.name);
         setSeniority(candidateResult.data.seniority || "");
+        setCandidateType((candidateResult.data as any).candidate_type || "externo");
         setInternalStatus((candidateResult.data as any).internal_status || "");
         setSalaryExpectation((candidateResult.data as any).salary_expectation || "");
         setHrNotes(candidateResult.data.hr_interview_notes || "");
@@ -114,6 +121,7 @@ export default function EditCandidate() {
       const updates: Record<string, unknown> = {
         name: name.trim(),
         seniority: seniority || null,
+        candidate_type: candidateType || "externo",
         internal_status: internalStatus || null,
         salary_expectation: salaryExpectation.trim() || null,
         hr_interview_notes: hrNotes.trim() || null,
@@ -191,18 +199,33 @@ export default function EditCandidate() {
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" required />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="seniority">Senioridade</Label>
-                <Select value={seniority} onValueChange={setSeniority}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a senioridade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SENIORITY_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <Select value={candidateType} onValueChange={setCandidateType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Interno ou Externo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CANDIDATE_TYPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="seniority">Senioridade</Label>
+                  <Select value={seniority} onValueChange={setSeniority}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a senioridade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SENIORITY_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {isAdmin && (

@@ -103,13 +103,14 @@ export default function JobDetails() {
         }
       }
 
-      const { data: candidatesData, error: candidatesError } = await supabase
-        .from("candidates")
-        .select("*")
+      const { data: candidateJobsData, error: candidatesError } = await supabase
+        .from("candidate_jobs" as any)
+        .select("candidate_id, candidates(*)")
         .eq("job_id", id)
         .order("created_at", { ascending: false });
 
       if (candidatesError) throw candidatesError;
+      const candidatesData = (candidateJobsData || []).map((cj: any) => cj.candidates).filter(Boolean);
       setCandidates(candidatesData as Candidate[] || []);
 
       // Buscar ou criar link de avaliação da vaga
