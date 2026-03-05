@@ -65,20 +65,27 @@ export default function EditCandidate() {
 
   useEffect(() => {
     if (!canEditJobs) { navigate("/"); return; }
-    if (jobId && candidateId) loadData();
-  }, [jobId, candidateId, canEditJobs]);
+    if (candidateId) loadData();
+  }, [candidateId, canEditJobs]);
 
   const loadData = async () => {
     try {
-      const [candidateResult, jobResult, tagsResult, candidateTagsResult] = await Promise.all([
+      const queries: Promise<any>[] = [
         supabase.from("candidates").select("*").eq("id", candidateId).maybeSingle(),
-        supabase.from("jobs").select("id, title").eq("id", jobId).maybeSingle(),
         supabase.from("tags").select("*").order("name"),
         supabase.from("candidate_tags").select("tag_id").eq("candidate_id", candidateId!),
-      ]);
+      ];
+      if (jobId) {
+        queries.push(supabase.from("jobs").select("id, title").eq("id", jobId).maybeSingle());
+      }
+
+      const results = await Promise.all(queries);
+      const candidateResult = results[0];
+      const tagsResult = results[1];
+      const candidateTagsResult = results[2];
+      const jobResult = jobId ? results[3] : null;
 
       if (candidateResult.error) throw candidateResult.error;
-      if (jobResult.error) throw jobResult.error;
 
       if (candidateResult.data) {
         setCandidate(candidateResult.data);
@@ -89,7 +96,7 @@ export default function EditCandidate() {
         setSalaryExpectation((candidateResult.data as any).salary_expectation || "");
         setHrNotes(candidateResult.data.hr_interview_notes || "");
       }
-      setJob(jobResult.data);
+      setJob(jobResult?.data || null);
       if (tagsResult.data) setTags(tagsResult.data);
       if (candidateTagsResult.data) setSelectedTags(candidateTagsResult.data.map((ct: any) => ct.tag_id));
     } catch (error: any) {
@@ -166,7 +173,7 @@ export default function EditCandidate() {
     );
   }
 
-  if (!candidate || !job) {
+  if (!candidate) {
     return (
       <div className="flex min-h-screen items-center justify-center flex-col gap-4">
         <div className="text-lg text-muted-foreground">Candidato não encontrado</div>
@@ -190,7 +197,7 @@ export default function EditCandidate() {
         <Card>
           <CardHeader>
             <CardTitle>Editar Candidato</CardTitle>
-            <CardDescription>Atualize as informações de {candidate.name} para a vaga {job.title}</CardDescription>
+            {job && <CardDescription>Atualize as informações de {candidate.name} para a vaga {job.title}</CardDescription>}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
