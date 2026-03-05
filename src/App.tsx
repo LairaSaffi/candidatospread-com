@@ -130,6 +130,30 @@ const App = () => (
                 </AuthGuard>
               }
             />
+            <Route
+              path="/candidates/new"
+              element={
+                <AuthGuard>
+                  <NewCandidate />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/candidates/:candidateId"
+              element={
+                <AuthGuard>
+                  <CandidateDetails />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/candidates/:candidateId/edit"
+              element={
+                <AuthGuard>
+                  <EditCandidate />
+                </AuthGuard>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

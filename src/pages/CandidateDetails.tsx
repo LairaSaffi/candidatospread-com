@@ -79,32 +79,38 @@ export default function CandidateDetails() {
   const { user, canEditJobs } = useAuth();
 
   useEffect(() => {
-    if (jobId && candidateId) {
+    if (candidateId) {
       loadData();
     }
   }, [jobId, candidateId]);
 
   const loadData = async () => {
     try {
-      const [candidateResult, jobResult] = await Promise.all([
-        supabase
-          .from("candidates")
-          .select("*")
-          .eq("id", candidateId)
-          .maybeSingle(),
-        supabase
-          .from("jobs")
-          .select("id, title")
-          .eq("id", jobId)
-          .maybeSingle()
-      ]);
+      const candidateResult = await supabase
+        .from("candidates")
+        .select("*")
+        .eq("id", candidateId)
+        .maybeSingle();
 
       if (candidateResult.error) throw candidateResult.error;
-      if (jobResult.error) throw jobResult.error;
+
+      // Determine jobId: from URL params, from candidate data, or from candidate_jobs
+      const effectiveJobId = jobId || candidateResult.data?.job_id;
+
+      let jobResult = null;
+      if (effectiveJobId) {
+        jobResult = await supabase
+          .from("jobs")
+          .select("id, title")
+          .eq("id", effectiveJobId)
+          .maybeSingle();
+        if (jobResult.error) throw jobResult.error;
+      }
+
 
       const candidateData = candidateResult.data as any;
       setCandidate({ ...candidateData, internal_status: candidateData.internal_status || null, salary_expectation: candidateData.salary_expectation || null } as Candidate);
-      setJob(jobResult.data);
+      setJob(jobResult?.data || null);
 
       // Load candidate tags
       const { data: ctData } = await supabase
@@ -198,7 +204,8 @@ export default function CandidateDetails() {
         title: "Candidato excluído",
         description: "O candidato foi removido com sucesso.",
       });
-      navigate(`/jobs/${jobId}`);
+      if (jobId) navigate(`/jobs/${jobId}`);
+      else navigate("/talents");
     } catch (error: any) {
       toast({
         title: "Erro ao excluir",
@@ -256,7 +263,7 @@ export default function CandidateDetails() {
     );
   }
 
-  if (!candidate || !job) {
+  if (!candidate) {
     return (
       <div className="flex min-h-screen items-center justify-center flex-col gap-4">
         <div className="text-lg text-muted-foreground">Candidato não encontrado</div>
@@ -311,7 +318,10 @@ export default function CandidateDetails() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/jobs/${jobId}/candidates/${candidateId}/edit`)}
+                      onClick={() => {
+                        if (jobId) navigate(`/jobs/${jobId}/candidates/${candidateId}/edit`);
+                        else navigate(`/candidates/${candidateId}/edit`);
+                      }}
                     >
                       <Pencil className="h-4 w-4 mr-2" />
                       Editar

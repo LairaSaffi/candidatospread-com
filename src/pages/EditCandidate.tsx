@@ -27,6 +27,11 @@ const INTERNAL_STATUS_OPTIONS = [
   { value: "reprovado_interno", label: "Reprovado" },
 ];
 
+const CANDIDATE_TYPE_OPTIONS = [
+  { value: "interno", label: "Interno" },
+  { value: "externo", label: "Externo" },
+];
+
 
 interface Tag {
   id: string;
@@ -46,6 +51,7 @@ export default function EditCandidate() {
 
   const [name, setName] = useState("");
   const [seniority, setSeniority] = useState("");
+  const [candidateType, setCandidateType] = useState("externo");
   const [internalStatus, setInternalStatus] = useState("");
   const [salaryExpectation, setSalaryExpectation] = useState("");
   const [hrNotes, setHrNotes] = useState("");
@@ -59,30 +65,32 @@ export default function EditCandidate() {
 
   useEffect(() => {
     if (!canEditJobs) { navigate("/"); return; }
-    if (jobId && candidateId) loadData();
-  }, [jobId, candidateId, canEditJobs]);
+    if (candidateId) loadData();
+  }, [candidateId, canEditJobs]);
 
   const loadData = async () => {
     try {
-      const [candidateResult, jobResult, tagsResult, candidateTagsResult] = await Promise.all([
-        supabase.from("candidates").select("*").eq("id", candidateId).maybeSingle(),
-        supabase.from("jobs").select("id, title").eq("id", jobId).maybeSingle(),
-        supabase.from("tags").select("*").order("name"),
-        supabase.from("candidate_tags").select("tag_id").eq("candidate_id", candidateId!),
-      ]);
+      const candidateResult = await supabase.from("candidates").select("*").eq("id", candidateId).maybeSingle();
+      const tagsResult = await supabase.from("tags").select("*").order("name");
+      const candidateTagsResult = await supabase.from("candidate_tags").select("tag_id").eq("candidate_id", candidateId!);
+      
+      let jobResult: any = null;
+      if (jobId) {
+        jobResult = await supabase.from("jobs").select("id, title").eq("id", jobId).maybeSingle();
+      }
 
       if (candidateResult.error) throw candidateResult.error;
-      if (jobResult.error) throw jobResult.error;
 
       if (candidateResult.data) {
         setCandidate(candidateResult.data);
         setName(candidateResult.data.name);
         setSeniority(candidateResult.data.seniority || "");
+        setCandidateType((candidateResult.data as any).candidate_type || "externo");
         setInternalStatus((candidateResult.data as any).internal_status || "");
         setSalaryExpectation((candidateResult.data as any).salary_expectation || "");
         setHrNotes(candidateResult.data.hr_interview_notes || "");
       }
-      setJob(jobResult.data);
+      setJob(jobResult?.data || null);
       if (tagsResult.data) setTags(tagsResult.data);
       if (candidateTagsResult.data) setSelectedTags(candidateTagsResult.data.map((ct: any) => ct.tag_id));
     } catch (error: any) {
@@ -114,6 +122,7 @@ export default function EditCandidate() {
       const updates: Record<string, unknown> = {
         name: name.trim(),
         seniority: seniority || null,
+        candidate_type: candidateType || "externo",
         internal_status: internalStatus || null,
         salary_expectation: salaryExpectation.trim() || null,
         hr_interview_notes: hrNotes.trim() || null,
@@ -158,7 +167,7 @@ export default function EditCandidate() {
     );
   }
 
-  if (!candidate || !job) {
+  if (!candidate) {
     return (
       <div className="flex min-h-screen items-center justify-center flex-col gap-4">
         <div className="text-lg text-muted-foreground">Candidato não encontrado</div>
@@ -182,7 +191,7 @@ export default function EditCandidate() {
         <Card>
           <CardHeader>
             <CardTitle>Editar Candidato</CardTitle>
-            <CardDescription>Atualize as informações de {candidate.name} para a vaga {job.title}</CardDescription>
+            {job && <CardDescription>Atualize as informações de {candidate.name} para a vaga {job.title}</CardDescription>}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -191,18 +200,33 @@ export default function EditCandidate() {
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" required />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="seniority">Senioridade</Label>
-                <Select value={seniority} onValueChange={setSeniority}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a senioridade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SENIORITY_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <Select value={candidateType} onValueChange={setCandidateType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Interno ou Externo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CANDIDATE_TYPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="seniority">Senioridade</Label>
+                  <Select value={seniority} onValueChange={setSeniority}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a senioridade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SENIORITY_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {isAdmin && (

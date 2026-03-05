@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Search, Users, Share2, Check, Loader2, Download } from "lucide-react";
+import { ArrowLeft, FileText, Search, Users, Share2, Check, Loader2, Download, Plus } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -265,12 +265,18 @@ export default function AvailableTalents() {
             </h2>
             <p className="text-muted-foreground mt-1">Candidatos disponíveis para alocação</p>
           </div>
-          {filtered.length > 0 && (
-            <Button variant="outline" onClick={exportTalentsToExcel}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar Excel
+          <div className="flex gap-2">
+            <Button onClick={() => navigate("/candidates/new")}>
+              <Plus className="h-4 w-4 mr-2" />
+              Cadastrar Talento
             </Button>
-          )}
+            {filtered.length > 0 && (
+              <Button variant="outline" onClick={exportTalentsToExcel}>
+                <Download className="h-4 w-4 mr-2" />
+                Exportar Excel
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filters */}
@@ -435,7 +441,10 @@ export default function AvailableTalents() {
                         )}
                         {copiedId === c.id ? "Copiado!" : "Link"}
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => navigate(`/jobs/${c.job_id}/candidates/${c.id}`)}>
+                      <Button size="sm" variant="ghost" onClick={() => {
+                        if (c.job_id) navigate(`/jobs/${c.job_id}/candidates/${c.id}`);
+                        else navigate(`/candidates/${c.id}`);
+                      }}>
                         Ver detalhes
                       </Button>
                     </div>
