@@ -47,6 +47,7 @@ export default function AvailableTalents() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [seniorityFilter, setSeniorityFilter] = useState("all");
+  const [candidateTypeFilter, setCandidateTypeFilter] = useState("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [openingFile, setOpeningFile] = useState<string | null>(null);
   const [generatingLink, setGeneratingLink] = useState<string | null>(null);
@@ -63,14 +64,14 @@ export default function AvailableTalents() {
 
   useEffect(() => {
     applyFilters();
-  }, [candidates, searchTerm, seniorityFilter, selectedTags]);
+  }, [candidates, searchTerm, seniorityFilter, selectedTags, candidateTypeFilter]);
 
   const loadData = async () => {
     try {
       const [candidatesResult, tagsResult] = await Promise.all([
         supabase
           .from("candidates")
-          .select("id, name, seniority, cv_url, technical_test_url, hr_interview_notes, salary_expectation, job_id, internal_status")
+          .select("id, name, seniority, cv_url, technical_test_url, hr_interview_notes, salary_expectation, candidate_type, job_id, internal_status")
           .eq("internal_status", "disponivel")
           .order("name"),
         supabase.from("tags").select("*").order("name"),
@@ -103,6 +104,7 @@ export default function AvailableTalents() {
         technical_test_url: c.technical_test_url,
         hr_interview_notes: c.hr_interview_notes,
         salary_expectation: c.salary_expectation,
+        candidate_type: c.candidate_type,
         job_id: c.job_id,
         tags: candidateTagsMap[c.id] || [],
       }));
@@ -123,6 +125,9 @@ export default function AvailableTalents() {
     }
     if (seniorityFilter !== "all") {
       result = result.filter((c) => c.seniority === seniorityFilter);
+    }
+    if (candidateTypeFilter !== "all") {
+      result = result.filter((c) => c.candidate_type === candidateTypeFilter);
     }
     if (selectedTags.length > 0) {
       result = result.filter((c) => selectedTags.every((tagId) => c.tags.some((t) => t.id === tagId)));
@@ -235,6 +240,7 @@ export default function AvailableTalents() {
   const exportTalentsToExcel = () => {
     const data = filtered.map((c) => ({
       Nome: c.name,
+      Tipo: c.candidate_type === "interno" ? "Interno" : "Externo",
       Senioridade: seniorityLabel(c.seniority),
       Skills: c.tags.map((t) => t.name).join(", ") || "—",
       "Pretensão Salarial": c.salary_expectation || "—",
@@ -299,6 +305,16 @@ export default function AvailableTalents() {
                   {SENIORITY_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <Select value={candidateTypeFilter} onValueChange={setCandidateTypeFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Tipos</SelectItem>
+                  <SelectItem value="interno">Interno</SelectItem>
+                  <SelectItem value="externo">Externo</SelectItem>
                 </SelectContent>
               </Select>
               <Popover>
@@ -397,11 +413,16 @@ export default function AvailableTalents() {
                       />
                       <div className="flex-1">
                         <CardTitle className="text-xl">{c.name}</CardTitle>
-                        {c.seniority && (
-                          <div className="mt-1">
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {c.candidate_type && (
+                            <Badge variant={c.candidate_type === "interno" ? "default" : "secondary"}>
+                              {c.candidate_type === "interno" ? "Interno" : "Externo"}
+                            </Badge>
+                          )}
+                          {c.seniority && (
                             <Badge variant="secondary">Senioridade: {seniorityLabel(c.seniority)}</Badge>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardHeader>
