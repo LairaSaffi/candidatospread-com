@@ -35,6 +35,7 @@ interface TalentCandidate {
   technical_test_url: string | null;
   hr_interview_notes: string | null;
   salary_expectation: string | null;
+  candidate_type: string | null;
   job_id: string;
   tags: Tag[];
 }
