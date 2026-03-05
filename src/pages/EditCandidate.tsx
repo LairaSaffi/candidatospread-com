@@ -47,6 +47,7 @@ export default function EditCandidate() {
   const [name, setName] = useState("");
   const [seniority, setSeniority] = useState("");
   const [internalStatus, setInternalStatus] = useState("");
+  const [salaryExpectation, setSalaryExpectation] = useState("");
   const [hrNotes, setHrNotes] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [technicalTestFile, setTechnicalTestFile] = useState<File | null>(null);
@@ -78,6 +79,7 @@ export default function EditCandidate() {
         setName(candidateResult.data.name);
         setSeniority(candidateResult.data.seniority || "");
         setInternalStatus((candidateResult.data as any).internal_status || "");
+        setSalaryExpectation((candidateResult.data as any).salary_expectation || "");
         setHrNotes(candidateResult.data.hr_interview_notes || "");
       }
       setJob(jobResult.data);
@@ -113,6 +115,7 @@ export default function EditCandidate() {
         name: name.trim(),
         seniority: seniority || null,
         internal_status: internalStatus || null,
+        salary_expectation: salaryExpectation.trim() || null,
         hr_interview_notes: hrNotes.trim() || null,
       };
 
@@ -237,6 +240,11 @@ export default function EditCandidate() {
                     ))
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="salary-expectation">Pretensão Salarial</Label>
+                <Input id="salary-expectation" value={salaryExpectation} onChange={(e) => setSalaryExpectation(e.target.value)} placeholder="Ex: R$ 8.000 - R$ 10.000" />
               </div>
 
               {/* CV */}
