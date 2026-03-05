@@ -49,6 +49,40 @@ interface EvaluationData {
   }>;
 }
 
+const JOB_DESCRIPTION_MAX_LINES = 3;
+
+function JobDescriptionCollapsible({ description }: { description: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (textRef.current) {
+      const lineHeight = parseFloat(getComputedStyle(textRef.current).lineHeight);
+      setNeedsTruncation(textRef.current.scrollHeight > lineHeight * JOB_DESCRIPTION_MAX_LINES + 2);
+    }
+  }, [description]);
+
+  return (
+    <CardContent className="pt-4">
+      <p
+        ref={textRef}
+        className={`text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed ${!expanded ? "line-clamp-3" : ""}`}
+      >
+        {description}
+      </p>
+      {needsTruncation && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-sm font-medium text-primary hover:underline mt-1"
+        >
+          {expanded ? "Ver menos" : "Ver mais"}
+        </button>
+      )}
+    </CardContent>
+  );
+}
+
 export default function EvaluateJob() {
   const { token } = useParams();
   const [job, setJob] = useState<Job | null>(null);
