@@ -142,6 +142,7 @@ export type Database = {
           internal_status: string | null
           job_id: string
           name: string
+          salary_expectation: string | null
           seniority: string | null
           status: string
           technical_test_url: string | null
@@ -155,6 +156,7 @@ export type Database = {
           internal_status?: string | null
           job_id: string
           name: string
+          salary_expectation?: string | null
           seniority?: string | null
           status?: string
           technical_test_url?: string | null
@@ -168,6 +170,7 @@ export type Database = {
           internal_status?: string | null
           job_id?: string
           name?: string
+          salary_expectation?: string | null
           seniority?: string | null
           status?: string
           technical_test_url?: string | null
