@@ -167,7 +167,7 @@ export default function AdminCandidates() {
           salary_expectation: c.salary_expectation || null,
           created_at: c.created_at,
           job_id: c.job_id,
-          job_title: c.jobs?.title || "Vaga não encontrada",
+          job_title: c.jobs?.title || "Sem vaga vinculada",
           client: c.jobs?.client || null,
           responsible_manager: c.jobs?.responsible_manager || null,
           recruiter_name: c.jobs?.recruiter_responsible_id 
