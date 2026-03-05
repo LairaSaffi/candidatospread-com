@@ -50,6 +50,7 @@ export default function EditCandidate() {
   const [saving, setSaving] = useState(false);
 
   const [name, setName] = useState("");
+  const [position, setPosition] = useState("");
   const [seniority, setSeniority] = useState("");
   const [candidateType, setCandidateType] = useState("externo");
   const [internalStatus, setInternalStatus] = useState("");
@@ -84,6 +85,7 @@ export default function EditCandidate() {
       if (candidateResult.data) {
         setCandidate(candidateResult.data);
         setName(candidateResult.data.name);
+        setPosition((candidateResult.data as any).position || "");
         setSeniority(candidateResult.data.seniority || "");
         setCandidateType((candidateResult.data as any).candidate_type || "externo");
         setInternalStatus((candidateResult.data as any).internal_status || "");
@@ -121,6 +123,7 @@ export default function EditCandidate() {
     try {
       const updates: Record<string, unknown> = {
         name: name.trim(),
+        position: position.trim() || null,
         seniority: seniority || null,
         candidate_type: candidateType || "externo",
         internal_status: internalStatus || null,
@@ -198,6 +201,11 @@ export default function EditCandidate() {
               <div className="space-y-2">
                 <Label htmlFor="name">Nome do Candidato *</Label>
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="position">Cargo</Label>
+                <Input id="position" value={position} onChange={(e) => setPosition(e.target.value)} placeholder="Ex: Desenvolvedor Full Stack" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

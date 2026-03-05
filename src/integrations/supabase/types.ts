@@ -179,6 +179,7 @@ export type Database = {
           internal_status: string | null
           job_id: string | null
           name: string
+          position: string | null
           salary_expectation: string | null
           seniority: string | null
           status: string
@@ -194,6 +195,7 @@ export type Database = {
           internal_status?: string | null
           job_id?: string | null
           name: string
+          position?: string | null
           salary_expectation?: string | null
           seniority?: string | null
           status?: string
@@ -209,6 +211,7 @@ export type Database = {
           internal_status?: string | null
           job_id?: string | null
           name?: string
+          position?: string | null
           salary_expectation?: string | null
           seniority?: string | null
           status?: string
