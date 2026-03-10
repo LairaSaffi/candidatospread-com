@@ -1,0 +1,1 @@
+UPDATE public.candidates SET internal_status = 'disponivel' WHERE job_id IS NULL AND internal_status IS NULL;
