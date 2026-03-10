@@ -100,6 +100,7 @@ export default function NewCandidate() {
           salary_expectation: salaryExpectation.trim() || null,
           hr_interview_notes: hrNotes || null,
           status: "pending",
+          internal_status: jobId ? null : "disponivel",
         } as any)
         .select()
         .single();
