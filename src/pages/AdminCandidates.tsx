@@ -439,7 +439,7 @@ export default function AdminCandidates() {
                       <TableRow 
                         key={candidate.id}
                         className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => navigate(`/jobs/${candidate.job_id}/candidates/${candidate.id}`)}
+                        onClick={() => candidate.job_id ? navigate(`/jobs/${candidate.job_id}/candidates/${candidate.id}`) : navigate(`/candidates/${candidate.id}`)}
                       >
                         <TableCell className="font-medium">{candidate.name}</TableCell>
                         <TableCell>{candidate.job_title}</TableCell>
