@@ -41,6 +41,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/bootstrap" element={<Bootstrap />} />
             <Route path="/evaluate/:token" element={<EvaluateJob />} />
+            <Route path="/hunter/:token" element={<HunterForm />} />
             <Route path="/candidate/:token" element={<ViewCandidate />} />
             <Route path="/talents/:token" element={<ViewTalents />} />
             <Route path="/change-password" element={<ChangePassword />} />
