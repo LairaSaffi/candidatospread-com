@@ -74,13 +74,15 @@ export default function NewJob() {
         description,
         work_model: workModel || null,
         client: client || null,
+        budget: budget || null,
+        hiring_model: hiringModel || null,
         responsible_manager: responsibleManager || null,
         spread_manager_id: spreadManagerId || null,
         commercial_responsible_id: commercialResponsibleId || null,
         recruiter_responsible_id: recruiterResponsibleId || null,
         created_by: user.id,
         status: "open",
-      });
+      } as any);
 
       if (error) throw error;
 
