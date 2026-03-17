@@ -82,6 +82,8 @@ export default function EditJob() {
       setDescription(data.description || "");
       setWorkModel(data.work_model || "");
       setClient(data.client || "");
+      setBudget((data as any).budget || "");
+      setHiringModel((data as any).hiring_model || "");
       setResponsibleManager(data.responsible_manager || "");
       setSpreadManagerId(data.spread_manager_id || "");
       setCommercialResponsibleId(data.commercial_responsible_id || "");
