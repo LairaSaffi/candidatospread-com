@@ -18,6 +18,8 @@ Deno.serve(async (req) => {
 
     const formData = await req.formData();
     const hunterToken = formData.get("hunter_token") as string;
+    const hunterName = formData.get("hunter_name") as string | null;
+    const hunterEmail = formData.get("hunter_email") as string | null;
     const name = formData.get("name") as string;
     const position = formData.get("position") as string | null;
     const seniority = formData.get("seniority") as string | null;
@@ -62,6 +64,8 @@ Deno.serve(async (req) => {
         salary_expectation: salaryExpectation || null,
         hiring_model: hiringModel || null,
         hr_notes: hrNotes || null,
+        hunter_name: hunterName || null,
+        hunter_email: hunterEmail || null,
       })
       .select("id")
       .single();

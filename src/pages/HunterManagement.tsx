@@ -39,6 +39,8 @@ interface HunterCandidate {
   spread_cv_url: string | null;
   adherent: boolean | null;
   adherent_notes: string | null;
+  hunter_name: string | null;
+  hunter_email: string | null;
   created_at: string;
   hunter_link_id: string;
   job_title: string;
@@ -281,6 +283,7 @@ export default function HunterManagement() {
                   <TableRow>
                     <TableHead>Candidato</TableHead>
                     <TableHead>Vaga</TableHead>
+                    <TableHead>Hunter</TableHead>
                     <TableHead>Disparo</TableHead>
                     <TableHead>Envio</TableHead>
                     <TableHead>Recrutadora</TableHead>
@@ -316,6 +319,14 @@ export default function HunterManagement() {
                         {c.job_client && (
                           <p className="text-xs text-muted-foreground">{c.job_client}</p>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-sm font-medium">{c.hunter_name || "—"}</p>
+                          {c.hunter_email && (
+                            <p className="text-xs text-muted-foreground">{c.hunter_email}</p>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm">
                         {new Date(c.link_created_at).toLocaleDateString("pt-BR")}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { X, CheckCircle, Loader2 } from "lucide-react";
+import { X, CheckCircle, Loader2, Plus, Trash2, UserPlus } from "lucide-react";
 import logoSpread from "@/assets/logo-spread.jpg";
 
 const SENIORITY_OPTIONS = [
@@ -45,6 +46,34 @@ interface JobInfo {
   hiring_model: string | null;
 }
 
+interface CandidateEntry {
+  id: string;
+  name: string;
+  position: string;
+  seniority: string;
+  candidateType: string;
+  salaryExpectation: string;
+  hiringModel: string;
+  hrNotes: string;
+  selectedTags: string[];
+  cvFile: File | null;
+  spreadCvFile: File | null;
+}
+
+const createEmptyCandidate = (): CandidateEntry => ({
+  id: crypto.randomUUID(),
+  name: "",
+  position: "",
+  seniority: "",
+  candidateType: "externo",
+  salaryExpectation: "",
+  hiringModel: "",
+  hrNotes: "",
+  selectedTags: [],
+  cvFile: null,
+  spreadCvFile: null,
+});
+
 export default function HunterForm() {
   const { token } = useParams();
   const [loading, setLoading] = useState(true);
@@ -55,16 +84,9 @@ export default function HunterForm() {
   const [job, setJob] = useState<JobInfo | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
 
-  const [name, setName] = useState("");
-  const [position, setPosition] = useState("");
-  const [seniority, setSeniority] = useState("");
-  const [candidateType, setCandidateType] = useState("externo");
-  const [salaryExpectation, setSalaryExpectation] = useState("");
-  const [hiringModel, setHiringModel] = useState("");
-  const [hrNotes, setHrNotes] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [cvFile, setCvFile] = useState<File | null>(null);
-  const [spreadCvFile, setSpreadCvFile] = useState<File | null>(null);
+  const [hunterName, setHunterName] = useState("");
+  const [hunterEmail, setHunterEmail] = useState("");
+  const [candidates, setCandidates] = useState<CandidateEntry[]>([createEmptyCandidate()]);
 
   const { toast } = useToast();
 
@@ -93,49 +115,75 @@ export default function HunterForm() {
     }
   };
 
-  const toggleTag = (tagId: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+  const updateCandidate = useCallback((id: string, field: keyof CandidateEntry, value: any) => {
+    setCandidates((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, [field]: value } : c))
     );
+  }, []);
+
+  const toggleTag = useCallback((candidateId: string, tagId: string) => {
+    setCandidates((prev) =>
+      prev.map((c) => {
+        if (c.id !== candidateId) return c;
+        const tags = c.selectedTags.includes(tagId)
+          ? c.selectedTags.filter((t) => t !== tagId)
+          : [...c.selectedTags, tagId];
+        return { ...c, selectedTags: tags };
+      })
+    );
+  }, []);
+
+  const addCandidate = () => {
+    setCandidates((prev) => [...prev, createEmptyCandidate()]);
+  };
+
+  const removeCandidate = (id: string) => {
+    if (candidates.length <= 1) return;
+    setCandidates((prev) => prev.filter((c) => c.id !== id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !hrNotes.trim()) {
-      toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
+    if (!hunterName.trim() || !hunterEmail.trim()) {
+      toast({ title: "Preencha seu nome e e-mail", variant: "destructive" });
       return;
+    }
+    for (const c of candidates) {
+      if (!c.name.trim() || !c.hrNotes.trim()) {
+        toast({ title: `Preencha nome e parecer RH de todos os candidatos`, variant: "destructive" });
+        return;
+      }
     }
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append("hunter_token", token!);
-      formData.append("name", name);
-      if (position) formData.append("position", position);
-      if (seniority) formData.append("seniority", seniority);
-      formData.append("candidate_type", candidateType);
-      if (salaryExpectation) formData.append("salary_expectation", salaryExpectation);
-      if (hiringModel) formData.append("hiring_model", hiringModel);
-      if (hrNotes) formData.append("hr_notes", hrNotes);
-      if (selectedTags.length > 0) formData.append("tags", JSON.stringify(selectedTags));
-      if (cvFile) formData.append("cv_file", cvFile);
-      if (spreadCvFile) formData.append("spread_cv_file", spreadCvFile);
+      for (const c of candidates) {
+        const formData = new FormData();
+        formData.append("hunter_token", token!);
+        formData.append("hunter_name", hunterName);
+        formData.append("hunter_email", hunterEmail);
+        formData.append("name", c.name);
+        if (c.position) formData.append("position", c.position);
+        if (c.seniority) formData.append("seniority", c.seniority);
+        formData.append("candidate_type", c.candidateType);
+        if (c.salaryExpectation) formData.append("salary_expectation", c.salaryExpectation);
+        if (c.hiringModel) formData.append("hiring_model", c.hiringModel);
+        if (c.hrNotes) formData.append("hr_notes", c.hrNotes);
+        if (c.selectedTags.length > 0) formData.append("tags", JSON.stringify(c.selectedTags));
+        if (c.cvFile) formData.append("cv_file", c.cvFile);
+        if (c.spreadCvFile) formData.append("spread_cv_file", c.spreadCvFile);
 
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-hunter-candidate`,
-        {
-          method: "POST",
-          headers: {
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: formData,
-        }
-      );
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Erro ao enviar candidato");
-
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-hunter-candidate`,
+          {
+            method: "POST",
+            headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+            body: formData,
+          }
+        );
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Erro ao enviar candidato");
+      }
       setSubmitted(true);
     } catch (error: any) {
       toast({ title: "Erro ao enviar", description: error.message, variant: "destructive" });
@@ -145,16 +193,7 @@ export default function HunterForm() {
   };
 
   const resetForm = () => {
-    setName("");
-    setPosition("");
-    setSeniority("");
-    setCandidateType("externo");
-    setSalaryExpectation("");
-    setHiringModel("");
-    setHrNotes("");
-    setSelectedTags([]);
-    setCvFile(null);
-    setSpreadCvFile(null);
+    setCandidates([createEmptyCandidate()]);
     setSubmitted(false);
   };
 
@@ -185,12 +224,14 @@ export default function HunterForm() {
         <Card className="max-w-md w-full mx-4">
           <CardContent className="py-12 text-center">
             <CheckCircle className="h-16 w-16 text-accent mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">Candidato enviado!</h2>
+            <h2 className="text-2xl font-semibold mb-2">
+              {candidates.length > 1 ? `${candidates.length} candidatos enviados!` : "Candidato enviado!"}
+            </h2>
             <p className="text-muted-foreground mb-6">
-              O candidato foi enviado com sucesso para avaliação da equipe.
+              Os candidatos foram enviados com sucesso para avaliação da equipe.
             </p>
             <Button onClick={resetForm} className="bg-[hsl(25,95%,53%)] hover:bg-[hsl(25,95%,45%)] text-white">
-              Enviar outro candidato
+              Enviar mais candidatos
             </Button>
           </CardContent>
         </Card>
@@ -228,126 +269,163 @@ export default function HunterForm() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Indicar Candidato</CardTitle>
-            <CardDescription>Preencha os dados do candidato para esta vaga</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome *</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome do candidato" required />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="position">Cargo</Label>
-                <Input id="position" value={position} onChange={(e) => setPosition(e.target.value)} placeholder="Ex: Desenvolvedor Full Stack" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit}>
+          {/* Hunter identification */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Identificação do Hunter
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Tipo</Label>
-                  <Select value={candidateType} onValueChange={setCandidateType}>
-                    <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+                  <Label htmlFor="hunterName">Seu Nome *</Label>
+                  <Input id="hunterName" value={hunterName} onChange={(e) => setHunterName(e.target.value)} placeholder="Nome completo" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hunterEmail">Seu E-mail *</Label>
+                  <Input id="hunterEmail" type="email" value={hunterEmail} onChange={(e) => setHunterEmail(e.target.value)} placeholder="email@exemplo.com" required />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Candidates */}
+          {candidates.map((candidate, index) => (
+            <Card key={candidate.id} className="mb-4">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">
+                    Candidato {candidates.length > 1 ? `#${index + 1}` : ""}
+                  </CardTitle>
+                  {candidates.length > 1 && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeCandidate(candidate.id)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4 mr-1" /> Remover
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Nome *</Label>
+                  <Input value={candidate.name} onChange={(e) => updateCandidate(candidate.id, "name", e.target.value)} placeholder="Nome do candidato" required />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Cargo</Label>
+                  <Input value={candidate.position} onChange={(e) => updateCandidate(candidate.id, "position", e.target.value)} placeholder="Ex: Desenvolvedor Full Stack" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo</Label>
+                    <Select value={candidate.candidateType} onValueChange={(v) => updateCandidate(candidate.id, "candidateType", v)}>
+                      <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+                      <SelectContent>
+                        {CANDIDATE_TYPE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Senioridade</Label>
+                    <Select value={candidate.seniority} onValueChange={(v) => updateCandidate(candidate.id, "seniority", v)}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {SENIORITY_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Modelo de Contratação</Label>
+                  <Select value={candidate.hiringModel} onValueChange={(v) => updateCandidate(candidate.id, "hiringModel", v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o modelo" /></SelectTrigger>
                     <SelectContent>
-                      {CANDIDATE_TYPE_OPTIONS.map((opt) => (
+                      {HIRING_MODEL_OPTIONS.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Senioridade</Label>
-                  <Select value={seniority} onValueChange={setSeniority}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
-                      {SENIORITY_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Tags de Conhecimento</Label>
+                  <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[42px]">
+                    {tags.length === 0 ? (
+                      <span className="text-sm text-muted-foreground">Nenhuma tag disponível</span>
+                    ) : (
+                      tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant={candidate.selectedTags.includes(tag.id) ? "default" : "outline"}
+                          className="cursor-pointer"
+                          onClick={() => toggleTag(candidate.id, tag.id)}
+                        >
+                          #{tag.name}
+                          {candidate.selectedTags.includes(tag.id) && <X className="h-3 w-3 ml-1" />}
+                        </Badge>
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label>Modelo de Contratação</Label>
-                <Select value={hiringModel} onValueChange={setHiringModel}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o modelo" /></SelectTrigger>
-                  <SelectContent>
-                    {HIRING_MODEL_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tags de Conhecimento</Label>
-                <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[42px]">
-                  {tags.length === 0 ? (
-                    <span className="text-sm text-muted-foreground">Nenhuma tag disponível</span>
-                  ) : (
-                    tags.map((tag) => (
-                      <Badge
-                        key={tag.id}
-                        variant={selectedTags.includes(tag.id) ? "default" : "outline"}
-                        className="cursor-pointer"
-                        onClick={() => toggleTag(tag.id)}
-                      >
-                        #{tag.name}
-                        {selectedTags.includes(tag.id) && <X className="h-3 w-3 ml-1" />}
-                      </Badge>
-                    ))
-                  )}
+                <div className="space-y-2">
+                  <Label>Pretensão Salarial</Label>
+                  <Input value={candidate.salaryExpectation} onChange={(e) => updateCandidate(candidate.id, "salaryExpectation", e.target.value)} placeholder="Ex: R$ 8.000 - R$ 10.000" />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="salaryExpectation">Pretensão Salarial</Label>
-                <Input id="salaryExpectation" value={salaryExpectation} onChange={(e) => setSalaryExpectation(e.target.value)} placeholder="Ex: R$ 8.000 - R$ 10.000" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cv">CV Padrão (PDF)</Label>
-                <div className="flex items-center gap-2">
-                  <Input id="cv" type="file" accept=".pdf" onChange={(e) => setCvFile(e.target.files?.[0] || null)} className="cursor-pointer" />
-                  {cvFile && <Button type="button" variant="ghost" size="sm" onClick={() => setCvFile(null)}>Remover</Button>}
+                <div className="space-y-2">
+                  <Label>CV Padrão (PDF)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input type="file" accept=".pdf" onChange={(e) => updateCandidate(candidate.id, "cvFile", e.target.files?.[0] || null)} className="cursor-pointer" />
+                    {candidate.cvFile && <Button type="button" variant="ghost" size="sm" onClick={() => updateCandidate(candidate.id, "cvFile", null)}>Remover</Button>}
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="spreadCv">CV Modelo Spread (PDF)</Label>
-                <div className="flex items-center gap-2">
-                  <Input id="spreadCv" type="file" accept=".pdf" onChange={(e) => setSpreadCvFile(e.target.files?.[0] || null)} className="cursor-pointer" />
-                  {spreadCvFile && <Button type="button" variant="ghost" size="sm" onClick={() => setSpreadCvFile(null)}>Remover</Button>}
+                <div className="space-y-2">
+                  <Label>CV Modelo Spread (PDF)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input type="file" accept=".pdf" onChange={(e) => updateCandidate(candidate.id, "spreadCvFile", e.target.files?.[0] || null)} className="cursor-pointer" />
+                    {candidate.spreadCvFile && <Button type="button" variant="ghost" size="sm" onClick={() => updateCandidate(candidate.id, "spreadCvFile", null)}>Remover</Button>}
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="hrNotes">Parecer RH *</Label>
-                <Textarea id="hrNotes" value={hrNotes} onChange={(e) => setHrNotes(e.target.value)} placeholder="Parecer sobre o candidato" rows={6} required />
-              </div>
+                <div className="space-y-2">
+                  <Label>Parecer RH *</Label>
+                  <Textarea value={candidate.hrNotes} onChange={(e) => updateCandidate(candidate.id, "hrNotes", e.target.value)} placeholder="Parecer sobre o candidato" rows={6} required />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
 
-              <div className="pt-4">
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-[hsl(25,95%,53%)] hover:bg-[hsl(25,95%,45%)] text-white font-semibold py-3"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Enviando...
-                    </>
-                  ) : (
-                    "Enviar Candidato"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          <Button type="button" variant="outline" onClick={addCandidate} className="w-full mb-6 border-dashed border-2">
+            <Plus className="h-4 w-4 mr-2" /> Adicionar outro candidato
+          </Button>
+
+          <div className="pt-2 pb-8">
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-[hsl(25,95%,53%)] hover:bg-[hsl(25,95%,45%)] text-white font-semibold py-3"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Enviando...
+                </>
+              ) : (
+                `Enviar ${candidates.length > 1 ? `${candidates.length} Candidatos` : "Candidato"}`
+              )}
+            </Button>
+          </div>
+        </form>
       </main>
     </div>
   );
