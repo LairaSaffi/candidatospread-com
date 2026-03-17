@@ -16,6 +16,8 @@ import NewCandidate from "./pages/NewCandidate";
 import CandidateDetails from "./pages/CandidateDetails";
 import EditCandidate from "./pages/EditCandidate";
 import EvaluateJob from "./pages/EvaluateJob";
+import HunterForm from "./pages/HunterForm";
+import HunterManagement from "./pages/HunterManagement";
 import AdminUsers from "./pages/AdminUsers";
 import AdminCandidates from "./pages/AdminCandidates";
 import AdminTags from "./pages/AdminTags";
