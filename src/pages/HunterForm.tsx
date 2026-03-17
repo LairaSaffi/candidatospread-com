@@ -29,8 +29,7 @@ const CANDIDATE_TYPE_OPTIONS = [
 const HIRING_MODEL_OPTIONS = [
   { value: "clt", label: "CLT" },
   { value: "pj", label: "PJ" },
-  { value: "cooperado", label: "Cooperado" },
-  { value: "temporario", label: "Temporário" },
+  { value: "ambos", label: "Ambos" },
 ];
 
 interface Tag {
