@@ -61,6 +61,8 @@ export default function JobDetails() {
   const [job, setJob] = useState<Job | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [evaluationLink, setEvaluationLink] = useState<EvaluationLink | null>(null);
+  const [hunterLink, setHunterLink] = useState<HunterLink | null>(null);
+  const [generatingHunterLink, setGeneratingHunterLink] = useState(false);
   const [users, setUsers] = useState<Record<string, UserProfile>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
