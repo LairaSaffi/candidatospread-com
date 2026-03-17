@@ -273,7 +273,9 @@ export type Database = {
           cv_url: string | null
           hiring_model: string | null
           hr_notes: string | null
+          hunter_email: string | null
           hunter_link_id: string
+          hunter_name: string | null
           id: string
           name: string
           position: string | null
@@ -289,7 +291,9 @@ export type Database = {
           cv_url?: string | null
           hiring_model?: string | null
           hr_notes?: string | null
+          hunter_email?: string | null
           hunter_link_id: string
+          hunter_name?: string | null
           id?: string
           name: string
           position?: string | null
@@ -305,7 +309,9 @@ export type Database = {
           cv_url?: string | null
           hiring_model?: string | null
           hr_notes?: string | null
+          hunter_email?: string | null
           hunter_link_id?: string
+          hunter_name?: string | null
           id?: string
           name?: string
           position?: string | null
