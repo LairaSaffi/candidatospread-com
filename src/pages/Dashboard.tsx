@@ -264,9 +264,6 @@ export default function Dashboard() {
                 Hunter
               </Button>
             )}
-              <Star className="h-4 w-4 mr-2" />
-              Talentos
-            </Button>
             <NotificationBell />
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
