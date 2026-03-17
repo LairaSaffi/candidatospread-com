@@ -32,6 +32,8 @@ interface Job {
   description: string | null;
   work_model: string | null;
   client: string | null;
+  budget: string | null;
+  hiring_model: string | null;
   responsible_manager: string | null;
   spread_manager_id: string | null;
   commercial_responsible_id: string | null;
@@ -271,6 +273,8 @@ export default function JobDetails() {
                 <CardDescription className="mt-2 space-y-1">
                   {job.work_model && <div>Modelo de Trabalho: {job.work_model}</div>}
                   {job.client && <div>Cliente: {job.client}</div>}
+                  {(job as any).budget && <div>Budget: {(job as any).budget}</div>}
+                  {(job as any).hiring_model && <div>Modelo de Contratação: {(job as any).hiring_model}</div>}
                   {job.responsible_manager && <div>Gestor Responsável (Cliente): {job.responsible_manager}</div>}
                   {getUserName(job.spread_manager_id) && <div>Gestor Spread: {getUserName(job.spread_manager_id)}</div>}
                   {getUserName(job.commercial_responsible_id) && <div>Responsável Comercial: {getUserName(job.commercial_responsible_id)}</div>}

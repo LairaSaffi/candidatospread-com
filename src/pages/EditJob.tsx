@@ -23,6 +23,8 @@ export default function EditJob() {
   const [description, setDescription] = useState("");
   const [workModel, setWorkModel] = useState("");
   const [client, setClient] = useState("");
+  const [budget, setBudget] = useState("");
+  const [hiringModel, setHiringModel] = useState("");
   const [responsibleManager, setResponsibleManager] = useState("");
   const [spreadManagerId, setSpreadManagerId] = useState("");
   const [commercialResponsibleId, setCommercialResponsibleId] = useState("");
@@ -80,6 +82,8 @@ export default function EditJob() {
       setDescription(data.description || "");
       setWorkModel(data.work_model || "");
       setClient(data.client || "");
+      setBudget((data as any).budget || "");
+      setHiringModel((data as any).hiring_model || "");
       setResponsibleManager(data.responsible_manager || "");
       setSpreadManagerId(data.spread_manager_id || "");
       setCommercialResponsibleId(data.commercial_responsible_id || "");
@@ -109,12 +113,14 @@ export default function EditJob() {
           description,
           work_model: workModel || null,
           client: client || null,
+          budget: budget || null,
+          hiring_model: hiringModel || null,
           responsible_manager: responsibleManager || null,
           spread_manager_id: spreadManagerId || null,
           commercial_responsible_id: commercialResponsibleId || null,
           recruiter_responsible_id: recruiterResponsibleId || null,
           status,
-        })
+        } as any)
         .eq("id", id);
 
       if (error) throw error;
@@ -224,6 +230,31 @@ export default function EditJob() {
                   onChange={(e) => setClient(e.target.value)}
                   placeholder="Nome do cliente"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Budget da Vaga</Label>
+                  <Input
+                    id="budget"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    placeholder="Ex: CLT R$ 8k e PJ R$ 12k"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Modelo de Contratação</Label>
+                  <Select value={hiringModel} onValueChange={setHiringModel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CLT">CLT</SelectItem>
+                      <SelectItem value="PJ">PJ</SelectItem>
+                      <SelectItem value="Ambos">Ambos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">

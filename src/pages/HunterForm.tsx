@@ -40,8 +40,9 @@ interface Tag {
 interface JobInfo {
   id: string;
   title: string;
-  client: string | null;
   description: string | null;
+  budget: string | null;
+  hiring_model: string | null;
 }
 
 export default function HunterForm() {
@@ -214,7 +215,10 @@ export default function HunterForm() {
           <Card className="mb-6 border-l-4 border-l-[hsl(25,95%,53%)]">
             <CardHeader className="pb-3">
               <CardTitle className="text-xl">{job.title}</CardTitle>
-              {job.client && <CardDescription>Cliente: {job.client}</CardDescription>}
+              <CardDescription className="space-y-1">
+                {job.hiring_model && <div>Modelo de Contratação: {job.hiring_model}</div>}
+                {job.budget && <div>Budget: {job.budget}</div>}
+              </CardDescription>
             </CardHeader>
             {job.description && (
               <CardContent>

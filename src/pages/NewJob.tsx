@@ -22,6 +22,8 @@ export default function NewJob() {
   const [description, setDescription] = useState("");
   const [workModel, setWorkModel] = useState("");
   const [client, setClient] = useState("");
+  const [budget, setBudget] = useState("");
+  const [hiringModel, setHiringModel] = useState("");
   const [responsibleManager, setResponsibleManager] = useState("");
   const [spreadManagerId, setSpreadManagerId] = useState("");
   const [commercialResponsibleId, setCommercialResponsibleId] = useState("");
@@ -72,13 +74,15 @@ export default function NewJob() {
         description,
         work_model: workModel || null,
         client: client || null,
+        budget: budget || null,
+        hiring_model: hiringModel || null,
         responsible_manager: responsibleManager || null,
         spread_manager_id: spreadManagerId || null,
         commercial_responsible_id: commercialResponsibleId || null,
         recruiter_responsible_id: recruiterResponsibleId || null,
         created_by: user.id,
         status: "open",
-      });
+      } as any);
 
       if (error) throw error;
 
@@ -166,6 +170,31 @@ export default function NewJob() {
                   onChange={(e) => setClient(e.target.value)}
                   placeholder="Nome do cliente"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Budget da Vaga</Label>
+                  <Input
+                    id="budget"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    placeholder="Ex: CLT R$ 8k e PJ R$ 12k"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Modelo de Contratação</Label>
+                  <Select value={hiringModel} onValueChange={setHiringModel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CLT">CLT</SelectItem>
+                      <SelectItem value="PJ">PJ</SelectItem>
+                      <SelectItem value="Ambos">Ambos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">
