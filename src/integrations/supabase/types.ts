@@ -228,6 +228,133 @@ export type Database = {
           },
         ]
       }
+      hunter_candidate_tags: {
+        Row: {
+          created_at: string
+          hunter_candidate_id: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          hunter_candidate_id: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          hunter_candidate_id?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hunter_candidate_tags_hunter_candidate_id_fkey"
+            columns: ["hunter_candidate_id"]
+            isOneToOne: false
+            referencedRelation: "hunter_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hunter_candidate_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hunter_candidates: {
+        Row: {
+          adherent: boolean | null
+          adherent_notes: string | null
+          candidate_type: string | null
+          created_at: string
+          cv_url: string | null
+          hiring_model: string | null
+          hr_notes: string | null
+          hunter_link_id: string
+          id: string
+          name: string
+          position: string | null
+          salary_expectation: string | null
+          seniority: string | null
+          spread_cv_url: string | null
+        }
+        Insert: {
+          adherent?: boolean | null
+          adherent_notes?: string | null
+          candidate_type?: string | null
+          created_at?: string
+          cv_url?: string | null
+          hiring_model?: string | null
+          hr_notes?: string | null
+          hunter_link_id: string
+          id?: string
+          name: string
+          position?: string | null
+          salary_expectation?: string | null
+          seniority?: string | null
+          spread_cv_url?: string | null
+        }
+        Update: {
+          adherent?: boolean | null
+          adherent_notes?: string | null
+          candidate_type?: string | null
+          created_at?: string
+          cv_url?: string | null
+          hiring_model?: string | null
+          hr_notes?: string | null
+          hunter_link_id?: string
+          id?: string
+          name?: string
+          position?: string | null
+          salary_expectation?: string | null
+          seniority?: string | null
+          spread_cv_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hunter_candidates_hunter_link_id_fkey"
+            columns: ["hunter_link_id"]
+            isOneToOne: false
+            referencedRelation: "hunter_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hunter_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          hunter_token: string
+          id: string
+          job_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          hunter_token?: string
+          id?: string
+          job_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          hunter_token?: string
+          id?: string
+          job_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hunter_links_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_evaluation_links: {
         Row: {
           created_at: string
@@ -500,6 +627,7 @@ export type Database = {
           job_id: string
         }[]
       }
+      get_hunter_form_data: { Args: { p_token: string }; Returns: Json }
       get_my_roles: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"][]
