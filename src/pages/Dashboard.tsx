@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter, Tag, Star, Download } from "lucide-react";
+import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter, Tag, Star, Download, Target } from "lucide-react";
 import * as XLSX from "xlsx";
 import { NotificationBell } from "@/components/NotificationBell";
 import logoSpread from "@/assets/logo-spread.jpg";
@@ -254,6 +254,16 @@ export default function Dashboard() {
               <Star className="h-4 w-4 mr-2" />
               Talentos
             </Button>
+            {isAdmin && (
+              <Button
+                size="sm"
+                onClick={() => navigate("/hunter")}
+                className="bg-[hsl(25,95%,53%)] hover:bg-[hsl(25,95%,45%)] text-white border-none"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Hunter
+              </Button>
+            )}
             <NotificationBell />
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />

@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.clear-password-flag]
 verify_jwt = false
+
+[functions.submit-hunter-candidate]
+verify_jwt = false

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ArrowLeft, Plus, FileText, Link as LinkIcon, Pencil, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Link as LinkIcon, Pencil, Trash2, Loader2, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -52,11 +52,17 @@ interface EvaluationLink {
   evaluator_token: string;
 }
 
+interface HunterLink {
+  hunter_token: string;
+}
+
 export default function JobDetails() {
   const { id } = useParams();
   const [job, setJob] = useState<Job | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [evaluationLink, setEvaluationLink] = useState<EvaluationLink | null>(null);
+  const [hunterLink, setHunterLink] = useState<HunterLink | null>(null);
+  const [generatingHunterLink, setGeneratingHunterLink] = useState(false);
   const [users, setUsers] = useState<Record<string, UserProfile>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -135,6 +141,17 @@ export default function JobDetails() {
         if (createError) throw createError;
         setEvaluationLink(newLink);
       }
+
+      // Check for existing hunter link
+      const { data: existingHunterLink } = await supabase
+        .from("hunter_links" as any)
+        .select("hunter_token")
+        .eq("job_id", id)
+        .maybeSingle();
+
+      if (existingHunterLink) {
+        setHunterLink(existingHunterLink as any);
+      }
     } catch (error: any) {
       toast({
         title: "Erro ao carregar dados",
@@ -154,6 +171,36 @@ export default function JobDetails() {
       title: "Link copiado!",
       description: "O link de avaliação da vaga foi copiado para a área de transferência.",
     });
+  };
+
+  const generateHunterLink = async () => {
+    if (!id) return;
+    setGeneratingHunterLink(true);
+    try {
+      if (hunterLink) {
+        const link = `${window.location.origin}/hunter/${hunterLink.hunter_token}`;
+        await navigator.clipboard.writeText(link);
+        toast({ title: "Link Hunter copiado!", description: "O link para o hunter foi copiado." });
+        return;
+      }
+
+      const { data: session } = await supabase.auth.getSession();
+      const { data: newLink, error } = await supabase
+        .from("hunter_links" as any)
+        .insert({ job_id: id, created_by: session?.session?.user?.id } as any)
+        .select("hunter_token")
+        .single();
+
+      if (error) throw error;
+      setHunterLink(newLink as any);
+      const link = `${window.location.origin}/hunter/${(newLink as any).hunter_token}`;
+      await navigator.clipboard.writeText(link);
+      toast({ title: "Link Hunter gerado e copiado!", description: "O link para o hunter externo foi criado e copiado." });
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } finally {
+      setGeneratingHunterLink(false);
+    }
   };
 
   const handleDeleteJob = async () => {
@@ -283,6 +330,21 @@ export default function JobDetails() {
                     >
                       <LinkIcon className="h-4 w-4 mr-2" />
                       Copiar Link
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      onClick={generateHunterLink}
+                      disabled={generatingHunterLink}
+                      className="bg-[hsl(25,95%,53%)] hover:bg-[hsl(25,95%,45%)] text-white border-none"
+                    >
+                      {generatingHunterLink ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Target className="h-4 w-4 mr-2" />
+                      )}
+                      {hunterLink ? "Copiar Link Hunter" : "Gerar Link Hunter"}
                     </Button>
                   )}
                 </div>

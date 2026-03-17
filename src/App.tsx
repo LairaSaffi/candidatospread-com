@@ -16,6 +16,8 @@ import NewCandidate from "./pages/NewCandidate";
 import CandidateDetails from "./pages/CandidateDetails";
 import EditCandidate from "./pages/EditCandidate";
 import EvaluateJob from "./pages/EvaluateJob";
+import HunterForm from "./pages/HunterForm";
+import HunterManagement from "./pages/HunterManagement";
 import AdminUsers from "./pages/AdminUsers";
 import AdminCandidates from "./pages/AdminCandidates";
 import AdminTags from "./pages/AdminTags";
@@ -39,6 +41,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/bootstrap" element={<Bootstrap />} />
             <Route path="/evaluate/:token" element={<EvaluateJob />} />
+            <Route path="/hunter/:token" element={<HunterForm />} />
             <Route path="/candidate/:token" element={<ViewCandidate />} />
             <Route path="/talents/:token" element={<ViewTalents />} />
             <Route path="/change-password" element={<ChangePassword />} />
@@ -127,6 +130,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <AvailableTalents />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/hunter"
+              element={
+                <AuthGuard>
+                  <HunterManagement />
                 </AuthGuard>
               }
             />
