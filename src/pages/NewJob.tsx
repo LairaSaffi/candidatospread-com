@@ -172,6 +172,31 @@ export default function NewJob() {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Budget da Vaga</Label>
+                  <Input
+                    id="budget"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    placeholder="Ex: CLT R$ 8k e PJ R$ 12k"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Modelo de Contratação</Label>
+                  <Select value={hiringModel} onValueChange={setHiringModel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CLT">CLT</SelectItem>
+                      <SelectItem value="PJ">PJ</SelectItem>
+                      <SelectItem value="Ambos">Ambos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="responsibleManager">Gestor Responsável (Cliente)</Label>
                 <Input
