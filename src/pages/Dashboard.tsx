@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter, Tag, Star, Download } from "lucide-react";
+import { Plus, Briefcase, Users, LogOut, Link as LinkIcon, Search, Settings, Filter, Tag, Star, Download, Target } from "lucide-react";
 import * as XLSX from "xlsx";
 import { NotificationBell } from "@/components/NotificationBell";
 import logoSpread from "@/assets/logo-spread.jpg";
