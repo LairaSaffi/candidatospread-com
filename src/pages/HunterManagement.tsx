@@ -202,7 +202,7 @@ export default function HunterManagement() {
             cv_url: evaluating.spread_cv_url || null,
             hr_interview_notes: evaluating.hr_notes || null,
             status: "pending",
-            internal_status: "Disponível",
+            internal_status: "disponivel",
           })
           .select("id")
           .single();
