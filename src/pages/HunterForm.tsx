@@ -43,6 +43,7 @@ interface JobInfo {
   description: string | null;
   budget: string | null;
   hiring_model: string | null;
+  work_model: string | null;
 }
 
 interface CandidateEntry {
