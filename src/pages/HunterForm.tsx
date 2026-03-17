@@ -29,8 +29,7 @@ const CANDIDATE_TYPE_OPTIONS = [
 const HIRING_MODEL_OPTIONS = [
   { value: "clt", label: "CLT" },
   { value: "pj", label: "PJ" },
-  { value: "cooperado", label: "Cooperado" },
-  { value: "temporario", label: "Temporário" },
+  { value: "ambos", label: "Ambos" },
 ];
 
 interface Tag {
@@ -44,6 +43,7 @@ interface JobInfo {
   description: string | null;
   budget: string | null;
   hiring_model: string | null;
+  work_model: string | null;
 }
 
 interface CandidateEntry {
@@ -257,6 +257,7 @@ export default function HunterForm() {
             <CardHeader className="pb-3">
               <CardTitle className="text-xl">{job.title}</CardTitle>
               <CardDescription className="space-y-1">
+                {job.work_model && <div>Modelo de Trabalho: {job.work_model}</div>}
                 {job.hiring_model && <div>Modelo de Contratação: {job.hiring_model}</div>}
                 {job.budget && <div>Budget: {job.budget}</div>}
               </CardDescription>
