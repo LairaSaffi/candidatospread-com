@@ -320,6 +320,14 @@ export default function HunterManagement() {
                           <p className="text-xs text-muted-foreground">{c.job_client}</p>
                         )}
                       </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-sm font-medium">{c.hunter_name || "—"}</p>
+                          {c.hunter_email && (
+                            <p className="text-xs text-muted-foreground">{c.hunter_email}</p>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-sm">
                         {new Date(c.link_created_at).toLocaleDateString("pt-BR")}
                       </TableCell>
