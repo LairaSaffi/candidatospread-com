@@ -386,11 +386,13 @@ export type Database = {
       }
       jobs: {
         Row: {
+          budget: string | null
           client: string | null
           commercial_responsible_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          hiring_model: string | null
           id: string
           recruiter_responsible_id: string | null
           responsible_manager: string | null
@@ -401,11 +403,13 @@ export type Database = {
           work_model: string | null
         }
         Insert: {
+          budget?: string | null
           client?: string | null
           commercial_responsible_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          hiring_model?: string | null
           id?: string
           recruiter_responsible_id?: string | null
           responsible_manager?: string | null
@@ -416,11 +420,13 @@ export type Database = {
           work_model?: string | null
         }
         Update: {
+          budget?: string | null
           client?: string | null
           commercial_responsible_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          hiring_model?: string | null
           id?: string
           recruiter_responsible_id?: string | null
           responsible_manager?: string | null
