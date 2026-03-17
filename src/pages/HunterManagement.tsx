@@ -39,6 +39,8 @@ interface HunterCandidate {
   spread_cv_url: string | null;
   adherent: boolean | null;
   adherent_notes: string | null;
+  hunter_name: string | null;
+  hunter_email: string | null;
   created_at: string;
   hunter_link_id: string;
   job_title: string;
