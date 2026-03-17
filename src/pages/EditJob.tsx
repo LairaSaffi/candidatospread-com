@@ -113,12 +113,14 @@ export default function EditJob() {
           description,
           work_model: workModel || null,
           client: client || null,
+          budget: budget || null,
+          hiring_model: hiringModel || null,
           responsible_manager: responsibleManager || null,
           spread_manager_id: spreadManagerId || null,
           commercial_responsible_id: commercialResponsibleId || null,
           recruiter_responsible_id: recruiterResponsibleId || null,
           status,
-        })
+        } as any)
         .eq("id", id);
 
       if (error) throw error;
