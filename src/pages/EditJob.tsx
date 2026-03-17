@@ -23,6 +23,8 @@ export default function EditJob() {
   const [description, setDescription] = useState("");
   const [workModel, setWorkModel] = useState("");
   const [client, setClient] = useState("");
+  const [budget, setBudget] = useState("");
+  const [hiringModel, setHiringModel] = useState("");
   const [responsibleManager, setResponsibleManager] = useState("");
   const [spreadManagerId, setSpreadManagerId] = useState("");
   const [commercialResponsibleId, setCommercialResponsibleId] = useState("");
