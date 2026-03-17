@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, Search, CheckCircle, XCircle, FileText, Loader2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Search, CheckCircle, XCircle, FileText, Loader2, ExternalLink, UserPlus, Eye } from "lucide-react";
 import logoSpread from "@/assets/logo-spread.jpg";
 
 interface HunterCandidate {
@@ -43,6 +45,7 @@ interface HunterCandidate {
   hunter_email: string | null;
   created_at: string;
   hunter_link_id: string;
+  job_id: string;
   job_title: string;
   job_client: string | null;
   link_created_at: string;
@@ -61,8 +64,7 @@ const SENIORITY_LABELS: Record<string, string> = {
 const HIRING_MODEL_LABELS: Record<string, string> = {
   clt: "CLT",
   pj: "PJ",
-  cooperado: "Cooperado",
-  temporario: "Temporário",
+  ambos: "Ambos",
 };
 
 export default function HunterManagement() {
@@ -70,8 +72,10 @@ export default function HunterManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [evaluating, setEvaluating] = useState<HunterCandidate | null>(null);
+  const [viewing, setViewing] = useState<HunterCandidate | null>(null);
   const [adherentValue, setAdherentValue] = useState<boolean | null>(null);
   const [adherentNotes, setAdherentNotes] = useState("");
+  const [addToJob, setAddToJob] = useState(true);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -83,7 +87,6 @@ export default function HunterManagement() {
 
   const loadCandidates = async () => {
     try {
-      // Load hunter candidates with link and job info
       const { data: hcData, error } = await supabase
         .from("hunter_candidates" as any)
         .select("*")
@@ -96,26 +99,21 @@ export default function HunterManagement() {
         return;
       }
 
-      // Get all hunter_link_ids
       const linkIds = [...new Set((hcData as any[]).map((hc) => hc.hunter_link_id))];
 
-      // Load hunter links
       const { data: linksData } = await supabase
         .from("hunter_links" as any)
         .select("id, job_id, created_by, created_at")
         .in("id", linkIds);
 
-      // Get job ids and recruiter ids
       const jobIds = [...new Set((linksData || []).map((l: any) => l.job_id))];
       const recruiterIds = [...new Set((linksData || []).map((l: any) => l.created_by).filter(Boolean))];
 
-      // Load jobs
       const { data: jobsData } = await supabase
         .from("jobs")
         .select("id, title, client")
         .in("id", jobIds);
 
-      // Load recruiter profiles
       let profilesMap: Record<string, string> = {};
       if (recruiterIds.length > 0) {
         const { data: profilesData } = await supabase
@@ -127,7 +125,6 @@ export default function HunterManagement() {
         }
       }
 
-      // Load tags for all hunter candidates
       const hcIds = (hcData as any[]).map((hc) => hc.id);
       const { data: tagsData } = await supabase
         .from("hunter_candidate_tags" as any)
@@ -142,19 +139,18 @@ export default function HunterManagement() {
         });
       }
 
-      // Build links map
       const linksMap: Record<string, any> = {};
       (linksData || []).forEach((l: any) => { linksMap[l.id] = l; });
 
       const jobsMap: Record<string, any> = {};
       (jobsData || []).forEach((j: any) => { jobsMap[j.id] = j; });
 
-      // Combine data
       const combined: HunterCandidate[] = (hcData as any[]).map((hc) => {
         const link = linksMap[hc.hunter_link_id] || {};
         const job = jobsMap[link.job_id] || {};
         return {
           ...hc,
+          job_id: link.job_id || "",
           job_title: job.title || "—",
           job_client: job.client || null,
           link_created_at: link.created_at || hc.created_at,
@@ -175,6 +171,7 @@ export default function HunterManagement() {
     setEvaluating(candidate);
     setAdherentValue(candidate.adherent);
     setAdherentNotes(candidate.adherent_notes || "");
+    setAddToJob(true);
   };
 
   const saveEvaluation = async () => {
@@ -191,6 +188,51 @@ export default function HunterManagement() {
 
       if (error) throw error;
 
+      // If marking as aderente and user wants to add to job/talent pool
+      if (adherentValue === true && addToJob && evaluating.job_id) {
+        // Create candidate in candidates table
+        const { data: newCandidate, error: candidateError } = await supabase
+          .from("candidates")
+          .insert({
+            name: evaluating.name,
+            position: evaluating.position || null,
+            seniority: evaluating.seniority || null,
+            candidate_type: evaluating.candidate_type || "externo",
+            salary_expectation: evaluating.salary_expectation || null,
+            cv_url: evaluating.cv_url || null,
+            hr_interview_notes: evaluating.hr_notes || null,
+            status: "pending",
+            internal_status: "Disponível",
+          })
+          .select("id")
+          .single();
+
+        if (candidateError) throw candidateError;
+
+        // Link candidate to job
+        const { error: linkError } = await supabase
+          .from("candidate_jobs")
+          .insert({
+            candidate_id: newCandidate.id,
+            job_id: evaluating.job_id,
+          });
+
+        if (linkError) throw linkError;
+
+        // Copy tags
+        if (evaluating.tags.length > 0) {
+          const tagInserts = evaluating.tags.map((t) => ({
+            candidate_id: newCandidate.id,
+            tag_id: t.id,
+          }));
+          await supabase.from("candidate_tags").insert(tagInserts);
+        }
+
+        toast({ title: "Candidato promovido!", description: "Adicionado à vaga e ao banco de talentos." });
+      } else {
+        toast({ title: "Avaliação salva!" });
+      }
+
       setCandidates((prev) =>
         prev.map((c) =>
           c.id === evaluating.id
@@ -199,7 +241,6 @@ export default function HunterManagement() {
         )
       );
       setEvaluating(null);
-      toast({ title: "Avaliação salva!" });
     } catch (error: any) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } finally {
@@ -218,7 +259,8 @@ export default function HunterManagement() {
     return (
       c.name.toLowerCase().includes(term) ||
       c.job_title.toLowerCase().includes(term) ||
-      c.recruiter_name?.toLowerCase().includes(term)
+      c.recruiter_name?.toLowerCase().includes(term) ||
+      c.hunter_name?.toLowerCase().includes(term)
     );
   });
 
@@ -251,7 +293,7 @@ export default function HunterManagement() {
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por candidato, vaga ou recrutadora..."
+                placeholder="Buscar por candidato, vaga, hunter ou recrutadora..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -284,9 +326,8 @@ export default function HunterManagement() {
                     <TableHead>Candidato</TableHead>
                     <TableHead>Vaga</TableHead>
                     <TableHead>Hunter</TableHead>
-                    <TableHead>Disparo</TableHead>
+                    <TableHead>Disparado por</TableHead>
                     <TableHead>Envio</TableHead>
-                    <TableHead>Recrutadora</TableHead>
                     <TableHead>Aderência</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -328,14 +369,16 @@ export default function HunterManagement() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">
-                        {new Date(c.link_created_at).toLocaleDateString("pt-BR")}
+                      <TableCell>
+                        <div>
+                          <p className="text-sm">{c.recruiter_name || "—"}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(c.link_created_at).toLocaleDateString("pt-BR")}
+                          </p>
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm">
                         {new Date(c.created_at).toLocaleDateString("pt-BR")}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {c.recruiter_name || "—"}
                       </TableCell>
                       <TableCell>
                         {c.adherent === true && (
@@ -378,6 +421,14 @@ export default function HunterManagement() {
                           )}
                           <Button
                             size="sm"
+                            variant="ghost"
+                            onClick={() => setViewing(c)}
+                            title="Ver detalhes"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => openEvaluation(c)}
                           >
@@ -394,9 +445,113 @@ export default function HunterManagement() {
         )}
       </main>
 
+      {/* Detail View Dialog */}
+      <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhes - {viewing?.name}</DialogTitle>
+          </DialogHeader>
+          {viewing && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Vaga</p>
+                  <p className="font-medium">{viewing.job_title}</p>
+                </div>
+                {viewing.job_client && (
+                  <div>
+                    <p className="text-muted-foreground">Cliente</p>
+                    <p className="font-medium">{viewing.job_client}</p>
+                  </div>
+                )}
+                {viewing.position && (
+                  <div>
+                    <p className="text-muted-foreground">Cargo</p>
+                    <p className="font-medium">{viewing.position}</p>
+                  </div>
+                )}
+                {viewing.seniority && (
+                  <div>
+                    <p className="text-muted-foreground">Senioridade</p>
+                    <p className="font-medium">{SENIORITY_LABELS[viewing.seniority] || viewing.seniority}</p>
+                  </div>
+                )}
+                {viewing.hiring_model && (
+                  <div>
+                    <p className="text-muted-foreground">Modelo Contratação</p>
+                    <p className="font-medium">{HIRING_MODEL_LABELS[viewing.hiring_model] || viewing.hiring_model}</p>
+                  </div>
+                )}
+                {viewing.salary_expectation && (
+                  <div>
+                    <p className="text-muted-foreground">Pretensão Salarial</p>
+                    <p className="font-medium">{viewing.salary_expectation}</p>
+                  </div>
+                )}
+                {viewing.candidate_type && (
+                  <div>
+                    <p className="text-muted-foreground">Tipo</p>
+                    <p className="font-medium">{viewing.candidate_type === "interno" ? "Interno" : "Externo"}</p>
+                  </div>
+                )}
+              </div>
+
+              {viewing.tags.length > 0 && (
+                <div className="flex gap-1 flex-wrap">
+                  {viewing.tags.map((t) => (
+                    <Badge key={t.id} variant="outline" className="text-xs">#{t.name}</Badge>
+                  ))}
+                </div>
+              )}
+
+              <Separator />
+
+              <div>
+                <p className="text-sm font-semibold mb-1">Parecer do Hunter</p>
+                <div className="bg-muted rounded-md p-3 text-sm whitespace-pre-wrap">
+                  {viewing.hr_notes || <span className="text-muted-foreground italic">Nenhum parecer informado</span>}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Hunter</p>
+                  <p className="font-medium">{viewing.hunter_name || "—"}</p>
+                  {viewing.hunter_email && (
+                    <p className="text-xs text-muted-foreground">{viewing.hunter_email}</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Disparado por</p>
+                  <p className="font-medium">{viewing.recruiter_name || "—"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(viewing.link_created_at).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                {viewing.cv_url && (
+                  <Button variant="outline" size="sm" onClick={() => window.open(getFileUrl("cvs", viewing.cv_url!), "_blank")}>
+                    <FileText className="h-4 w-4 mr-1" /> CV Padrão
+                  </Button>
+                )}
+                {viewing.spread_cv_url && (
+                  <Button variant="outline" size="sm" onClick={() => window.open(getFileUrl("spread-cvs", viewing.spread_cv_url!), "_blank")}>
+                    <ExternalLink className="h-4 w-4 mr-1" /> CV Spread
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Evaluation Dialog */}
       <Dialog open={!!evaluating} onOpenChange={(open) => !open && setEvaluating(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Avaliar Candidato - {evaluating?.name}</DialogTitle>
           </DialogHeader>
@@ -409,20 +564,25 @@ export default function HunterManagement() {
                 {evaluating.hiring_model && (
                   <p><strong>Modelo:</strong> {HIRING_MODEL_LABELS[evaluating.hiring_model] || evaluating.hiring_model}</p>
                 )}
-                {evaluating.hr_notes && (
-                  <div>
-                    <strong>Parecer RH:</strong>
-                    <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{evaluating.hr_notes}</p>
-                  </div>
-                )}
-                {evaluating.tags.length > 0 && (
-                  <div className="flex gap-1 flex-wrap">
-                    {evaluating.tags.map((t) => (
-                      <Badge key={t.id} variant="outline" className="text-xs">#{t.name}</Badge>
-                    ))}
-                  </div>
-                )}
               </div>
+
+              {evaluating.hr_notes && (
+                <div>
+                  <p className="text-sm font-semibold mb-1">Parecer do Hunter</p>
+                  <div className="bg-muted rounded-md p-3 text-sm whitespace-pre-wrap">
+                    {evaluating.hr_notes}
+                  </div>
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="text-sm">
+                <p className="text-muted-foreground">Hunter: <span className="text-foreground font-medium">{evaluating.hunter_name || "—"}</span> {evaluating.hunter_email && `(${evaluating.hunter_email})`}</p>
+                <p className="text-muted-foreground">Disparado por: <span className="text-foreground font-medium">{evaluating.recruiter_name || "—"}</span></p>
+              </div>
+
+              <Separator />
 
               <div className="flex gap-3">
                 <Button
@@ -442,6 +602,26 @@ export default function HunterManagement() {
                   Não Aderente
                 </Button>
               </div>
+
+              {adherentValue === true && (
+                <div className="flex items-start gap-2 p-3 bg-accent/10 rounded-md border border-accent/20">
+                  <Checkbox
+                    id="addToJob"
+                    checked={addToJob}
+                    onCheckedChange={(v) => setAddToJob(!!v)}
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="addToJob" className="text-sm cursor-pointer">
+                    <span className="font-medium flex items-center gap-1">
+                      <UserPlus className="h-3.5 w-3.5" />
+                      Adicionar ao banco de candidatos
+                    </span>
+                    <span className="text-muted-foreground block mt-0.5">
+                      Cria o candidato na vaga "{evaluating.job_title}" e no banco de talentos
+                    </span>
+                  </label>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Observações</label>
