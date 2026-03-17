@@ -257,6 +257,7 @@ export default function HunterForm() {
             <CardHeader className="pb-3">
               <CardTitle className="text-xl">{job.title}</CardTitle>
               <CardDescription className="space-y-1">
+                {job.work_model && <div>Modelo de Trabalho: {job.work_model}</div>}
                 {job.hiring_model && <div>Modelo de Contratação: {job.hiring_model}</div>}
                 {job.budget && <div>Budget: {job.budget}</div>}
               </CardDescription>
