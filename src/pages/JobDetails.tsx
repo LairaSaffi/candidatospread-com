@@ -173,6 +173,36 @@ export default function JobDetails() {
     });
   };
 
+  const generateHunterLink = async () => {
+    if (!id) return;
+    setGeneratingHunterLink(true);
+    try {
+      if (hunterLink) {
+        const link = `${window.location.origin}/hunter/${hunterLink.hunter_token}`;
+        await navigator.clipboard.writeText(link);
+        toast({ title: "Link Hunter copiado!", description: "O link para o hunter foi copiado." });
+        return;
+      }
+
+      const { data: session } = await supabase.auth.getSession();
+      const { data: newLink, error } = await supabase
+        .from("hunter_links" as any)
+        .insert({ job_id: id, created_by: session?.session?.user?.id } as any)
+        .select("hunter_token")
+        .single();
+
+      if (error) throw error;
+      setHunterLink(newLink as any);
+      const link = `${window.location.origin}/hunter/${(newLink as any).hunter_token}`;
+      await navigator.clipboard.writeText(link);
+      toast({ title: "Link Hunter gerado e copiado!", description: "O link para o hunter externo foi criado e copiado." });
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } finally {
+      setGeneratingHunterLink(false);
+    }
+  };
+
   const handleDeleteJob = async () => {
     if (!id) return;
     setDeleting(true);
