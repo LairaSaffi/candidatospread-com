@@ -32,6 +32,8 @@ interface Job {
   description: string | null;
   work_model: string | null;
   client: string | null;
+  budget: string | null;
+  hiring_model: string | null;
   responsible_manager: string | null;
   spread_manager_id: string | null;
   commercial_responsible_id: string | null;
