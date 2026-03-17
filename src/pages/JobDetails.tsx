@@ -332,10 +332,22 @@ export default function JobDetails() {
                       Copiar Link
                     </Button>
                   )}
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      onClick={generateHunterLink}
+                      disabled={generatingHunterLink}
+                      className="bg-[hsl(25,95%,53%)] hover:bg-[hsl(25,95%,45%)] text-white border-none"
+                    >
+                      {generatingHunterLink ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Target className="h-4 w-4 mr-2" />
+                      )}
+                      {hunterLink ? "Copiar Link Hunter" : "Gerar Link Hunter"}
+                    </Button>
+                  )}
                 </div>
-              </div>
-            </div>
-          </CardHeader>
           {job.description && (
             <CardContent>
               <p className="text-muted-foreground whitespace-pre-wrap">{job.description}</p>
