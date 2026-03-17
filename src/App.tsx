@@ -134,6 +134,14 @@ const App = () => (
               }
             />
             <Route
+              path="/hunter"
+              element={
+                <AuthGuard>
+                  <HunterManagement />
+                </AuthGuard>
+              }
+            />
+            <Route
               path="/candidates/new"
               element={
                 <AuthGuard>
