@@ -141,6 +141,17 @@ export default function JobDetails() {
         if (createError) throw createError;
         setEvaluationLink(newLink);
       }
+
+      // Check for existing hunter link
+      const { data: existingHunterLink } = await supabase
+        .from("hunter_links" as any)
+        .select("hunter_token")
+        .eq("job_id", id)
+        .maybeSingle();
+
+      if (existingHunterLink) {
+        setHunterLink(existingHunterLink as any);
+      }
     } catch (error: any) {
       toast({
         title: "Erro ao carregar dados",
