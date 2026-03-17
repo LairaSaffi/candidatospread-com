@@ -348,6 +348,9 @@ export default function JobDetails() {
                     </Button>
                   )}
                 </div>
+              </div>
+            </div>
+          </CardHeader>
           {job.description && (
             <CardContent>
               <p className="text-muted-foreground whitespace-pre-wrap">{job.description}</p>
