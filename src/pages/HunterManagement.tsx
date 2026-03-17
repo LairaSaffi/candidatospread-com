@@ -283,6 +283,7 @@ export default function HunterManagement() {
                   <TableRow>
                     <TableHead>Candidato</TableHead>
                     <TableHead>Vaga</TableHead>
+                    <TableHead>Hunter</TableHead>
                     <TableHead>Disparo</TableHead>
                     <TableHead>Envio</TableHead>
                     <TableHead>Recrutadora</TableHead>
