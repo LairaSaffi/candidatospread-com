@@ -62,6 +62,8 @@ Deno.serve(async (req) => {
         salary_expectation: salaryExpectation || null,
         hiring_model: hiringModel || null,
         hr_notes: hrNotes || null,
+        hunter_name: hunterName || null,
+        hunter_email: hunterEmail || null,
       })
       .select("id")
       .single();
