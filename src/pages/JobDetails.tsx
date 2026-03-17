@@ -52,6 +52,10 @@ interface EvaluationLink {
   evaluator_token: string;
 }
 
+interface HunterLink {
+  hunter_token: string;
+}
+
 export default function JobDetails() {
   const { id } = useParams();
   const [job, setJob] = useState<Job | null>(null);
