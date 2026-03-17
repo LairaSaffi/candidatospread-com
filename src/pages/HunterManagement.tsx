@@ -199,7 +199,7 @@ export default function HunterManagement() {
             seniority: evaluating.seniority || null,
             candidate_type: evaluating.candidate_type || "externo",
             salary_expectation: evaluating.salary_expectation || null,
-            cv_url: evaluating.cv_url || null,
+            cv_url: evaluating.spread_cv_url || null,
             hr_interview_notes: evaluating.hr_notes || null,
             status: "pending",
             internal_status: "Disponível",
