@@ -40,8 +40,9 @@ interface Tag {
 interface JobInfo {
   id: string;
   title: string;
-  client: string | null;
   description: string | null;
+  budget: string | null;
+  hiring_model: string | null;
 }
 
 export default function HunterForm() {
