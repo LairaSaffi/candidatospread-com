@@ -45,6 +45,7 @@ const evaluationLabels: Record<string, string> = {
 const jobStatusLabels: Record<string, string> = {
   open: "Aberta",
   cancelled: "Cancelada",
+  lost: "Perdida",
 };
 
 export default function AdminCandidates() {
