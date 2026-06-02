@@ -21,6 +21,7 @@ interface CandidateWithDetails {
   created_at: string;
   job_id: string;
   job_title: string;
+  job_status: string | null;
   client: string | null;
   responsible_manager: string | null;
   recruiter_name: string | null;
@@ -39,6 +40,12 @@ const statusLabels: Record<string, string> = {
 const evaluationLabels: Record<string, string> = {
   interested: "Interessado",
   rejected: "Não Aprovado",
+};
+
+const jobStatusLabels: Record<string, string> = {
+  open: "Aberta",
+  closed: "Fechada",
+  on_hold: "Em Espera",
 };
 
 export default function AdminCandidates() {
@@ -70,32 +77,51 @@ export default function AdminCandidates() {
 
   const loadCandidates = async () => {
     try {
-      // Buscar candidatos com informações da vaga
+      // Buscar todos os candidatos
       const { data: candidatesData, error: candidatesError } = await supabase
         .from("candidates")
-        .select(`
-          id,
-          name,
-          status,
-          salary_expectation,
-          created_at,
-          job_id,
-          jobs (
-            title,
-            client,
-            responsible_manager,
-            recruiter_responsible_id
-          )
-        `)
+        .select(`id, name, status, salary_expectation, created_at, job_id`)
         .order("created_at", { ascending: false });
 
       if (candidatesError) throw candidatesError;
 
-      // Buscar perfis dos recrutadores
-      const recruiterIds = candidatesData
-        ?.map((c: any) => c.jobs?.recruiter_responsible_id)
-        .filter((id: string | null): id is string => Boolean(id));
+      const candidateIds = candidatesData?.map((c: any) => c.id) || [];
 
+      // Buscar relação N:N candidate_jobs
+      let candidateJobs: { candidate_id: string; job_id: string }[] = [];
+      if (candidateIds.length > 0) {
+        const { data: cjData } = await supabase
+          .from("candidate_jobs")
+          .select("candidate_id, job_id")
+          .in("candidate_id", candidateIds);
+        candidateJobs = cjData || [];
+      }
+
+      // Conjunto de job_ids para buscar info das vagas
+      const jobIdsSet = new Set<string>();
+      candidateJobs.forEach((cj) => jobIdsSet.add(cj.job_id));
+      candidatesData?.forEach((c: any) => {
+        if (c.job_id) jobIdsSet.add(c.job_id);
+      });
+
+      let jobsMap: Record<string, any> = {};
+      if (jobIdsSet.size > 0) {
+        const { data: jobsData } = await supabase
+          .from("jobs")
+          .select("id, title, client, status, responsible_manager, recruiter_responsible_id")
+          .in("id", Array.from(jobIdsSet));
+        if (jobsData) {
+          jobsMap = jobsData.reduce((acc: Record<string, any>, j: any) => {
+            acc[j.id] = j;
+            return acc;
+          }, {});
+        }
+      }
+
+      // Buscar perfis dos recrutadores
+      const recruiterIds = Object.values(jobsMap)
+        .map((j: any) => j.recruiter_responsible_id)
+        .filter((id: string | null): id is string => Boolean(id));
       const uniqueRecruiterIds = [...new Set(recruiterIds)];
 
       let recruiterProfiles: Record<string, string> = {};
@@ -114,7 +140,6 @@ export default function AdminCandidates() {
       }
 
       // Buscar avaliações dos candidatos
-      const candidateIds = candidatesData?.map((c: any) => c.id) || [];
       let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null }> = {};
       
       if (candidateIds.length > 0) {
@@ -157,8 +182,15 @@ export default function AdminCandidates() {
         }
       }
 
-      // Montar dados finais
-      const formattedCandidates: CandidateWithDetails[] = candidatesData?.map((c: any) => {
+      // Montar dados finais (expandindo candidatos com múltiplas vagas)
+      const candidateJobsByCandidate: Record<string, string[]> = {};
+      candidateJobs.forEach((cj) => {
+        if (!candidateJobsByCandidate[cj.candidate_id]) candidateJobsByCandidate[cj.candidate_id] = [];
+        candidateJobsByCandidate[cj.candidate_id].push(cj.job_id);
+      });
+
+      const buildRow = (c: any, jobId: string | null): CandidateWithDetails => {
+        const job = jobId ? jobsMap[jobId] : null;
         const evalData = evaluations[c.id];
         return {
           id: c.id,
@@ -166,20 +198,33 @@ export default function AdminCandidates() {
           status: c.status,
           salary_expectation: c.salary_expectation || null,
           created_at: c.created_at,
-          job_id: c.job_id,
-          job_title: c.jobs?.title || "Sem vaga vinculada",
-          client: c.jobs?.client || null,
-          responsible_manager: c.jobs?.responsible_manager || null,
-          recruiter_name: c.jobs?.recruiter_responsible_id 
-            ? recruiterProfiles[c.jobs.recruiter_responsible_id] || null 
+          job_id: jobId || "",
+          job_title: job?.title || "Sem vaga vinculada",
+          job_status: job?.status || null,
+          client: job?.client || null,
+          responsible_manager: job?.responsible_manager || null,
+          recruiter_name: job?.recruiter_responsible_id
+            ? recruiterProfiles[job.recruiter_responsible_id] || null
             : null,
           evaluation_decision: evalData?.decision || null,
           evaluated_by_user_id: evalData?.evaluated_by_user_id || null,
-          evaluator_name: evalData?.evaluated_by_user_id 
-            ? evaluatorProfiles[evalData.evaluated_by_user_id] || null 
+          evaluator_name: evalData?.evaluated_by_user_id
+            ? evaluatorProfiles[evalData.evaluated_by_user_id] || null
             : null,
         };
-      }) || [];
+      };
+
+      const formattedCandidates: CandidateWithDetails[] = [];
+      candidatesData?.forEach((c: any) => {
+        const linkedJobs = candidateJobsByCandidate[c.id] || [];
+        if (linkedJobs.length === 0) {
+          formattedCandidates.push(buildRow(c, c.job_id || null));
+        } else {
+          linkedJobs.forEach((jobId) => {
+            formattedCandidates.push(buildRow(c, jobId));
+          });
+        }
+      });
 
       setCandidates(formattedCandidates);
 
