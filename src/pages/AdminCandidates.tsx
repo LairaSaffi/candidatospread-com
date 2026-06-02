@@ -57,6 +57,7 @@ export default function AdminCandidates() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
+  const [jobStatusFilter, setJobStatusFilter] = useState<string>("all");
   const [clients, setClients] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -74,7 +75,7 @@ export default function AdminCandidates() {
 
   useEffect(() => {
     filterCandidates();
-  }, [candidates, searchTerm, statusFilter, clientFilter]);
+  }, [candidates, searchTerm, statusFilter, clientFilter, jobStatusFilter]);
 
   const loadCandidates = async () => {
     try {
@@ -269,6 +270,10 @@ export default function AdminCandidates() {
       filtered = filtered.filter((c) => c.client === clientFilter);
     }
 
+    if (jobStatusFilter !== "all") {
+      filtered = filtered.filter((c) => c.job_status === jobStatusFilter);
+    }
+
     setFilteredCandidates(filtered);
   };
 
@@ -443,6 +448,19 @@ export default function AdminCandidates() {
                       {client}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <Select value={jobStatusFilter} onValueChange={setJobStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Status da Vaga" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="open">Aberta</SelectItem>
+                  <SelectItem value="cancelled">Cancelada</SelectItem>
+                  <SelectItem value="lost">Perdida</SelectItem>
+                  <SelectItem value="completed">Concluída</SelectItem>
                 </SelectContent>
               </Select>
             </div>
