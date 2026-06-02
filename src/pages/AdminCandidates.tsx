@@ -46,6 +46,7 @@ const jobStatusLabels: Record<string, string> = {
   open: "Aberta",
   cancelled: "Cancelada",
   lost: "Perdida",
+  completed: "Concluída",
 };
 
 export default function AdminCandidates() {
