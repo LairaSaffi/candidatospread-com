@@ -38,7 +38,7 @@ interface Job {
   spread_manager_id: string | null;
   commercial_responsible_id: string | null;
   recruiter_responsible_id: string | null;
-  status: "open" | "cancelled";
+  status: "open" | "cancelled" | "lost";
 }
 
 interface Candidate {

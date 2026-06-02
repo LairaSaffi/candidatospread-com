@@ -217,6 +217,7 @@ export default function EditJob() {
                   <SelectContent>
                     <SelectItem value="open">Aberta</SelectItem>
                     <SelectItem value="cancelled">Cancelada</SelectItem>
+                    <SelectItem value="lost">Perdida</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
