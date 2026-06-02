@@ -18,7 +18,7 @@ interface Job {
   id: string;
   title: string;
   client: string | null;
-  status: "open" | "closed" | "on_hold";
+  status: "open" | "cancelled";
   created_at: string;
   candidate_count?: number;
   spread_manager_id: string | null;
@@ -170,7 +170,7 @@ export default function Dashboard() {
     const data = filteredJobs.map((job) => ({
       Título: job.title,
       Cliente: job.client || "—",
-      Status: job.status === "open" ? "Aberta" : job.status === "closed" ? "Fechada" : "Em espera",
+      Status: job.status === "open" ? "Aberta" : "Cancelada",
       Candidatos: job.candidate_count || 0,
       "Data de Criação": new Date(job.created_at).toLocaleDateString("pt-BR"),
     }));
@@ -320,8 +320,7 @@ export default function Dashboard() {
                 <SelectContent>
                   <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="open">Abertas</SelectItem>
-                  <SelectItem value="closed">Fechadas</SelectItem>
-                  <SelectItem value="on_hold">Em espera</SelectItem>
+                  <SelectItem value="cancelled">Canceladas</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={clientFilter} onValueChange={setClientFilter}>

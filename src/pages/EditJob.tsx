@@ -216,8 +216,7 @@ export default function EditJob() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="open">Aberta</SelectItem>
-                    <SelectItem value="closed">Fechada</SelectItem>
-                    <SelectItem value="on_hold">Em Espera</SelectItem>
+                    <SelectItem value="cancelled">Cancelada</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -7,10 +7,9 @@ interface StatusBadgeProps {
 }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive"; colorClass?: string }> = {
-  // Evaluation statuses
+  // Job statuses
   open: { label: "Aberta", variant: "default" },
-  closed: { label: "Fechada", variant: "secondary" },
-  on_hold: { label: "Em Espera", variant: "outline" },
+  cancelled: { label: "Cancelada", variant: "destructive" },
   pending: { label: "Pendente", variant: "default" },
   under_review: { label: "Em Análise", variant: "default" },
   approved: { label: "Aprovado", variant: "default", colorClass: "bg-green-500 text-white" },
