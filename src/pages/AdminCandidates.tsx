@@ -306,6 +306,7 @@ export default function AdminCandidates() {
       const headers = [
         "Nome do Candidato",
         "Nome da Vaga",
+        "Status da Vaga",
         "Cliente",
         "Gestor Responsável",
         "Recrutador",
@@ -318,6 +319,7 @@ export default function AdminCandidates() {
       const rows = filteredCandidates.map((c) => [
         c.name,
         c.job_title,
+        c.job_status ? jobStatusLabels[c.job_status] || c.job_status : "-",
         c.client || "-",
         c.responsible_manager || "-",
         c.recruiter_name || "-",
@@ -470,6 +472,7 @@ export default function AdminCandidates() {
                     <TableRow>
                       <TableHead>Nome do Candidato</TableHead>
                       <TableHead>Nome da Vaga</TableHead>
+                      <TableHead>Status da Vaga</TableHead>
                       <TableHead>Cliente</TableHead>
                       <TableHead>Gestor Responsável</TableHead>
                       <TableHead>Recrutador</TableHead>
@@ -482,12 +485,19 @@ export default function AdminCandidates() {
                   <TableBody>
                     {filteredCandidates.map((candidate) => (
                       <TableRow 
-                        key={candidate.id}
+                        key={`${candidate.id}-${candidate.job_id || "none"}`}
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => candidate.job_id ? navigate(`/jobs/${candidate.job_id}/candidates/${candidate.id}`) : navigate(`/candidates/${candidate.id}`)}
                       >
                         <TableCell className="font-medium">{candidate.name}</TableCell>
                         <TableCell>{candidate.job_title}</TableCell>
+                        <TableCell>
+                          {candidate.job_status ? (
+                            <Badge variant="outline">{jobStatusLabels[candidate.job_status] || candidate.job_status}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
                         <TableCell>{candidate.client || "-"}</TableCell>
                         <TableCell>{candidate.responsible_manager || "-"}</TableCell>
                         <TableCell>{candidate.recruiter_name || "-"}</TableCell>
