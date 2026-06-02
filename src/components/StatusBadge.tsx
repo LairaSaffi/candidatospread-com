@@ -10,6 +10,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   // Job statuses
   open: { label: "Aberta", variant: "default" },
   cancelled: { label: "Cancelada", variant: "destructive" },
+  lost: { label: "Perdida", variant: "destructive", colorClass: "bg-orange-500 text-white" },
   pending: { label: "Pendente", variant: "default" },
   under_review: { label: "Em Análise", variant: "default" },
   approved: { label: "Aprovado", variant: "default", colorClass: "bg-green-500 text-white" },
