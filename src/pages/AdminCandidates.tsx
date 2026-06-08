@@ -28,6 +28,7 @@ interface CandidateWithDetails {
   evaluation_decision: string | null;
   evaluated_by_user_id: string | null;
   evaluator_name: string | null;
+  evaluated_at: string | null;
 }
 
 const statusLabels: Record<string, string> = {
@@ -142,20 +143,21 @@ export default function AdminCandidates() {
       }
 
       // Buscar avaliações dos candidatos
-      let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null }> = {};
+      let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null }> = {};
       
       if (candidateIds.length > 0) {
         const { data: evaluationsData } = await supabase
           .from("candidate_evaluations")
-          .select("candidate_id, decision, evaluated_by_user_id")
+          .select("candidate_id, decision, evaluated_by_user_id, evaluated_at, created_at")
           .in("candidate_id", candidateIds)
           .not("decision", "is", null);
 
         if (evaluationsData) {
-          evaluations = evaluationsData.reduce((acc: Record<string, { decision: string; evaluated_by_user_id: string | null }>, e) => {
+          evaluations = evaluationsData.reduce((acc: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null }>, e) => {
             acc[e.candidate_id] = { 
               decision: e.decision!, 
-              evaluated_by_user_id: e.evaluated_by_user_id 
+              evaluated_by_user_id: e.evaluated_by_user_id,
+              evaluated_at: (e as any).evaluated_at || (e as any).created_at || null,
             };
             return acc;
           }, {});
@@ -213,6 +215,7 @@ export default function AdminCandidates() {
           evaluator_name: evalData?.evaluated_by_user_id
             ? evaluatorProfiles[evalData.evaluated_by_user_id] || null
             : null,
+          evaluated_at: evalData?.evaluated_at || null,
         };
       };
 
@@ -320,6 +323,7 @@ export default function AdminCandidates() {
         "Data de Envio",
         "Status Avaliação",
         "Avaliado por",
+        "Data Avaliação",
       ];
 
       const rows = filteredCandidates.map((c) => [
@@ -337,6 +341,7 @@ export default function AdminCandidates() {
         c.evaluated_by_user_id 
           ? (c.evaluator_name || "Usuário interno")
           : (c.evaluation_decision ? "Link externo" : "-"),
+        c.evaluated_at ? format(new Date(c.evaluated_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
       ]);
 
       // Montar CSV com BOM para UTF-8
@@ -499,6 +504,7 @@ export default function AdminCandidates() {
                       <TableHead>Data de Envio</TableHead>
                       <TableHead>Status Avaliação</TableHead>
                       <TableHead>Avaliado por</TableHead>
+                      <TableHead>Data Avaliação</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -535,6 +541,13 @@ export default function AdminCandidates() {
                             <span className="text-sm">{candidate.evaluator_name || "Usuário interno"}</span>
                           ) : candidate.evaluation_decision ? (
                             <span className="text-sm text-muted-foreground">Link externo</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {candidate.evaluated_at ? (
+                            <span className="text-sm">{format(new Date(candidate.evaluated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
