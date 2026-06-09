@@ -478,6 +478,51 @@ export default function CandidateDetails() {
           </Card>
         )}
 
+        {/* Avaliação do Cliente */}
+        {evaluation && (
+          <Card className="mt-6">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  {evaluation.decision === "interested" ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : evaluation.decision === "rejected" ? (
+                    <XCircle className="h-5 w-5 text-destructive" />
+                  ) : null}
+                  Avaliação do Cliente
+                </CardTitle>
+                {evaluation.decision && (
+                  <StatusBadge
+                    status={evaluation.decision === "interested" ? "approved" : "rejected"}
+                  />
+                )}
+              </div>
+              <CardDescription className="mt-1">
+                {evaluation.evaluator_name ? `Avaliado por ${evaluation.evaluator_name}` : "Avaliação externa do cliente"}
+                {evaluation.evaluated_at && (
+                  <> · {format(new Date(evaluation.evaluated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {evaluation.justification ? (
+                <div>
+                  <p className="text-sm font-medium mb-1">Feedback do cliente</p>
+                  <p className="whitespace-pre-wrap text-sm text-muted-foreground">{evaluation.justification}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Nenhum feedback escrito fornecido.</p>
+              )}
+              {evaluation.interview_schedule_options && (
+                <div>
+                  <p className="text-sm font-medium mb-1">Sugestão de horários para entrevista</p>
+                  <p className="whitespace-pre-wrap text-sm text-muted-foreground">{evaluation.interview_schedule_options}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Histórico de Vagas */}
         {linkedJobs.length > 0 && (
           <Card className="mt-6">
