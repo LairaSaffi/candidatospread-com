@@ -224,7 +224,7 @@ export default function AdminCandidates() {
             : null,
           evaluated_at: evalData?.evaluated_at || null,
           evaluation_justification: evalData?.justification || null,
-
+          interview_schedule_options: evalData?.interview_schedule_options || null,
         };
       };
 
