@@ -147,22 +147,23 @@ export default function AdminCandidates() {
       }
 
       // Buscar avaliações dos candidatos
-      let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null }> = {};
+      let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null; interview_schedule_options: string | null }> = {};
       
       if (candidateIds.length > 0) {
         const { data: evaluationsData } = await supabase
           .from("candidate_evaluations")
-          .select("candidate_id, decision, evaluated_by_user_id, evaluated_at, created_at, justification")
+          .select("candidate_id, decision, evaluated_by_user_id, evaluated_at, created_at, justification, interview_schedule_options")
           .in("candidate_id", candidateIds)
           .not("decision", "is", null);
 
         if (evaluationsData) {
-          evaluations = evaluationsData.reduce((acc: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null }>, e) => {
+          evaluations = evaluationsData.reduce((acc: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null; interview_schedule_options: string | null }>, e) => {
             acc[e.candidate_id] = { 
               decision: e.decision!, 
               evaluated_by_user_id: e.evaluated_by_user_id,
               evaluated_at: (e as any).evaluated_at || (e as any).created_at || null,
               justification: (e as any).justification || null,
+              interview_schedule_options: (e as any).interview_schedule_options || null,
             };
             return acc;
           }, {});
