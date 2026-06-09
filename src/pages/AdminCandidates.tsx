@@ -29,7 +29,9 @@ interface CandidateWithDetails {
   evaluated_by_user_id: string | null;
   evaluator_name: string | null;
   evaluated_at: string | null;
+  evaluation_justification: string | null;
 }
+
 
 const statusLabels: Record<string, string> = {
   pending: "Pendente",
@@ -143,26 +145,28 @@ export default function AdminCandidates() {
       }
 
       // Buscar avaliações dos candidatos
-      let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null }> = {};
+      let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null }> = {};
       
       if (candidateIds.length > 0) {
         const { data: evaluationsData } = await supabase
           .from("candidate_evaluations")
-          .select("candidate_id, decision, evaluated_by_user_id, evaluated_at, created_at")
+          .select("candidate_id, decision, evaluated_by_user_id, evaluated_at, created_at, justification")
           .in("candidate_id", candidateIds)
           .not("decision", "is", null);
 
         if (evaluationsData) {
-          evaluations = evaluationsData.reduce((acc: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null }>, e) => {
+          evaluations = evaluationsData.reduce((acc: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null }>, e) => {
             acc[e.candidate_id] = { 
               decision: e.decision!, 
               evaluated_by_user_id: e.evaluated_by_user_id,
               evaluated_at: (e as any).evaluated_at || (e as any).created_at || null,
+              justification: (e as any).justification || null,
             };
             return acc;
           }, {});
         }
       }
+
 
       // Buscar nomes dos avaliadores internos
       const evaluatorIds = Object.values(evaluations)
@@ -216,6 +220,8 @@ export default function AdminCandidates() {
             ? evaluatorProfiles[evalData.evaluated_by_user_id] || null
             : null,
           evaluated_at: evalData?.evaluated_at || null,
+          evaluation_justification: evalData?.justification || null,
+
         };
       };
 
@@ -324,7 +330,9 @@ export default function AdminCandidates() {
         "Status Avaliação",
         "Avaliado por",
         "Data Avaliação",
+        "Feedback do Cliente",
       ];
+
 
       const rows = filteredCandidates.map((c) => [
         c.name,
@@ -342,7 +350,9 @@ export default function AdminCandidates() {
           ? (c.evaluator_name || "Usuário interno")
           : (c.evaluation_decision ? "Link externo" : "-"),
         c.evaluated_at ? format(new Date(c.evaluated_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
+        c.evaluation_justification || "-",
       ]);
+
 
       // Montar CSV com BOM para UTF-8
       const BOM = "\uFEFF";
@@ -505,7 +515,9 @@ export default function AdminCandidates() {
                       <TableHead>Status Avaliação</TableHead>
                       <TableHead>Avaliado por</TableHead>
                       <TableHead>Data Avaliação</TableHead>
+                      <TableHead>Feedback do Cliente</TableHead>
                     </TableRow>
+
                   </TableHeader>
                   <TableBody>
                     {filteredCandidates.map((candidate) => (
@@ -552,7 +564,20 @@ export default function AdminCandidates() {
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
+                        <TableCell>
+                          {candidate.evaluation_justification ? (
+                            <span 
+                              className="text-sm line-clamp-2 max-w-[200px] cursor-help" 
+                              title={candidate.evaluation_justification}
+                            >
+                              {candidate.evaluation_justification}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
                       </TableRow>
+
                     ))}
                   </TableBody>
                 </Table>
