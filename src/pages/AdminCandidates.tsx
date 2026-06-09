@@ -30,7 +30,9 @@ interface CandidateWithDetails {
   evaluator_name: string | null;
   evaluated_at: string | null;
   evaluation_justification: string | null;
+  interview_schedule_options: string | null;
 }
+
 
 
 const statusLabels: Record<string, string> = {
