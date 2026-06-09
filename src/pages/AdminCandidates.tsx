@@ -334,6 +334,7 @@ export default function AdminCandidates() {
         "Avaliado por",
         "Data Avaliação",
         "Feedback do Cliente",
+        "Sugestão de Horários",
       ];
 
 
@@ -354,6 +355,7 @@ export default function AdminCandidates() {
           : (c.evaluation_decision ? "Link externo" : "-"),
         c.evaluated_at ? format(new Date(c.evaluated_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
         c.evaluation_justification || "-",
+        c.interview_schedule_options || "-",
       ]);
 
 
