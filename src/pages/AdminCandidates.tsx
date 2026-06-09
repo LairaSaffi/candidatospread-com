@@ -30,7 +30,9 @@ interface CandidateWithDetails {
   evaluator_name: string | null;
   evaluated_at: string | null;
   evaluation_justification: string | null;
+  interview_schedule_options: string | null;
 }
+
 
 
 const statusLabels: Record<string, string> = {
@@ -145,22 +147,23 @@ export default function AdminCandidates() {
       }
 
       // Buscar avaliações dos candidatos
-      let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null }> = {};
+      let evaluations: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null; interview_schedule_options: string | null }> = {};
       
       if (candidateIds.length > 0) {
         const { data: evaluationsData } = await supabase
           .from("candidate_evaluations")
-          .select("candidate_id, decision, evaluated_by_user_id, evaluated_at, created_at, justification")
+          .select("candidate_id, decision, evaluated_by_user_id, evaluated_at, created_at, justification, interview_schedule_options")
           .in("candidate_id", candidateIds)
           .not("decision", "is", null);
 
         if (evaluationsData) {
-          evaluations = evaluationsData.reduce((acc: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null }>, e) => {
+          evaluations = evaluationsData.reduce((acc: Record<string, { decision: string; evaluated_by_user_id: string | null; evaluated_at: string | null; justification: string | null; interview_schedule_options: string | null }>, e) => {
             acc[e.candidate_id] = { 
               decision: e.decision!, 
               evaluated_by_user_id: e.evaluated_by_user_id,
               evaluated_at: (e as any).evaluated_at || (e as any).created_at || null,
               justification: (e as any).justification || null,
+              interview_schedule_options: (e as any).interview_schedule_options || null,
             };
             return acc;
           }, {});
@@ -221,7 +224,7 @@ export default function AdminCandidates() {
             : null,
           evaluated_at: evalData?.evaluated_at || null,
           evaluation_justification: evalData?.justification || null,
-
+          interview_schedule_options: evalData?.interview_schedule_options || null,
         };
       };
 
@@ -331,6 +334,7 @@ export default function AdminCandidates() {
         "Avaliado por",
         "Data Avaliação",
         "Feedback do Cliente",
+        "Sugestão de Horários",
       ];
 
 
@@ -351,6 +355,7 @@ export default function AdminCandidates() {
           : (c.evaluation_decision ? "Link externo" : "-"),
         c.evaluated_at ? format(new Date(c.evaluated_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-",
         c.evaluation_justification || "-",
+        c.interview_schedule_options || "-",
       ]);
 
 
@@ -565,13 +570,25 @@ export default function AdminCandidates() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {candidate.evaluation_justification ? (
-                            <span 
-                              className="text-sm line-clamp-2 max-w-[200px] cursor-help" 
-                              title={candidate.evaluation_justification}
-                            >
-                              {candidate.evaluation_justification}
-                            </span>
+                          {candidate.evaluation_justification || candidate.interview_schedule_options ? (
+                            <div className="text-sm max-w-[250px]">
+                              {candidate.evaluation_justification && (
+                                <span 
+                                  className="line-clamp-2 cursor-help block" 
+                                  title={candidate.evaluation_justification}
+                                >
+                                  {candidate.evaluation_justification}
+                                </span>
+                              )}
+                              {candidate.interview_schedule_options && (
+                                <span 
+                                  className="line-clamp-2 cursor-help block mt-1 text-muted-foreground" 
+                                  title={candidate.interview_schedule_options}
+                                >
+                                  <span className="font-medium text-foreground">Horários:</span> {candidate.interview_schedule_options}
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
