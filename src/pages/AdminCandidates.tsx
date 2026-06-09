@@ -568,13 +568,25 @@ export default function AdminCandidates() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {candidate.evaluation_justification ? (
-                            <span 
-                              className="text-sm line-clamp-2 max-w-[200px] cursor-help" 
-                              title={candidate.evaluation_justification}
-                            >
-                              {candidate.evaluation_justification}
-                            </span>
+                          {candidate.evaluation_justification || candidate.interview_schedule_options ? (
+                            <div className="text-sm max-w-[250px]">
+                              {candidate.evaluation_justification && (
+                                <span 
+                                  className="line-clamp-2 cursor-help block" 
+                                  title={candidate.evaluation_justification}
+                                >
+                                  {candidate.evaluation_justification}
+                                </span>
+                              )}
+                              {candidate.interview_schedule_options && (
+                                <span 
+                                  className="line-clamp-2 cursor-help block mt-1 text-muted-foreground" 
+                                  title={candidate.interview_schedule_options}
+                                >
+                                  <span className="font-medium text-foreground">Horários:</span> {candidate.interview_schedule_options}
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
