@@ -85,6 +85,26 @@ Deno.serve(async (req) => {
     if (job.commercial_responsible_id) responsibleIds.push(job.commercial_responsible_id);
     if (job.recruiter_responsible_id) responsibleIds.push(job.recruiter_responsible_id);
 
+    // Também notificar TODOS os recrutadores (usuários com papel 'admin'),
+    // independentemente de estarem atribuídos à vaga.
+    const EXCLUDED_RECRUITER_IDS = new Set<string>([
+      "a9df932a-006c-4b60-8727-78d963cb1dc2",
+    ]);
+    const { data: recruiterRoles, error: recruiterRolesError } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "admin");
+
+    if (recruiterRolesError) {
+      console.error("Erro ao buscar recrutadores:", recruiterRolesError);
+    } else if (recruiterRoles) {
+      for (const r of recruiterRoles) {
+        if (r.user_id && !EXCLUDED_RECRUITER_IDS.has(r.user_id)) {
+          responsibleIds.push(r.user_id);
+        }
+      }
+    }
+
     const uniqueIds = [...new Set(responsibleIds)];
 
     if (uniqueIds.length === 0) {
